@@ -2,6 +2,27 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 3 - Pantalla de detalle de mascota
+
+**Fecha:** 2026-07-02
+
+### Añadido
+
+- Pantalla de detalle de mascota (`PetDetailScreen`) completa y conectada a Room vía `PetDetailViewModel`:
+  - `TopAppBar` con el nombre de la mascota, botón de regreso, botón de editar perfil (ícono lápiz) y botón de eliminar mascota.
+  - Encabezado con foto circular de la mascota (o ícono de serpiente como placeholder), nombre, especie, edad calculada a partir de `birthDate` y peso actual (último `WeightLog` o el peso inicial de `Pet` si no hay registros).
+  - Tres pestañas (`TabRow`/`Tab`) debajo del encabezado: "Alimentación", "Peso" y "Notas".
+  - Pestaña **Alimentación**: lista (`LazyColumn`) de `FeedingLog` ordenada por fecha descendente, cada tarjeta muestra fecha, tipo de presa, peso de presa e ícono de aceptación (check verde / X roja). `FloatingActionButton` "+" para navegar a `AddFeedingScreen`.
+  - Pestaña **Peso**: gráfica de línea simple (`WeightLineChart`) dibujada con `Canvas` nativo de Jetpack Compose (sin dependencias externas) con el historial de peso, y debajo una lista con fecha y peso en gramos de cada registro. `FloatingActionButton` "+" para navegar a `AddWeightScreen`.
+  - Pestaña **Notas**: campo de texto editable con las notas generales de la mascota y botón "Guardar notas" que actualiza el registro en Room mediante `SavePetUseCase`.
+  - Diálogo de edición de perfil (`EditPetDialog`) accesible desde el ícono de lápiz del `TopAppBar`, con campos de nombre, especie y fecha de nacimiento (`DatePicker` de Material 3), que persiste los cambios con `SavePetUseCase`.
+- `PetDetailViewModel` ampliado con `currentWeight` (combinando `pet` y `weightLogs`), `updateNotes()` y `updateProfile()`, reutilizando `SavePetUseCase` para las actualizaciones parciales del perfil.
+
+### Notas técnicas
+
+- Se optó por una gráfica de línea construida con `Canvas` de Compose en lugar de MPAndroidChart para evitar agregar un repositorio JitPack y una dependencia basada en Views (con su respectivo wrapper `AndroidView`); mantiene el enfoque 100% Compose y el theming oscuro de terrario.
+- Se mantiene el patrón sin inyección de dependencias externa: los casos de uso adicionales se resuelven manualmente desde `SnakeTrackerApplication` al construir el `ViewModel`.
+
 ## Etapa 2 - Pantalla principal y formulario de alta
 
 **Fecha:** 2026-07-02
