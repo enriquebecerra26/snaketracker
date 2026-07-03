@@ -2,6 +2,24 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 6 - Alimentación avanzada, mudas y defecaciones
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- `FeedingLog` (Room) reconstruido con campos ampliados: `time` (HH:mm), `preyCondition`, `preySize`, `preyWeightGrams` (reemplaza a `preyWeight`) y `durationMinutes`. Nuevas entidades `SheddingLog` (fases de muda, completitud, humedad, problemas) y `DefecationLog` (fecha, tipo, notas), con sus DAOs (`insert`, `getByPetId`, `deleteById`) y repositorios. `MIGRATION_3_4` (versión 4) reconstruye `feeding_logs` preservando los datos existentes (peso y fecha se migran; los campos nuevos toman valores por defecto) y crea `shedding_logs`/`defecation_logs`.
+- Nuevos casos de uso `GetSheddingLogsUseCase`/`SaveSheddingLogUseCase`/`DeleteSheddingLogUseCase` y sus equivalentes de `DefecationLog`; nuevos repositorios expuestos desde `SnakeTrackerApplication`.
+- `AddFeedingScreen` rehecho: fecha y hora (`DateField` + nuevo `TimeField` con `TimePicker` de Material 3), tipo de presa por chips (Ratón/Rata/ASF/Conejo/Pollito/Otro, con campo libre si se elige "Otro"), condición y tamaño con `SegmentedButton` (nuevo componente genérico `SegmentedSelector`, reutilizado también por `SexSelector`), peso de presa opcional, switch "¿Comió?", duración en minutos (solo visible si comió) y notas. Validación: tipo de presa obligatorio.
+- Nuevas pantallas `AddSheddingScreen` (con `AddSheddingViewModel`, ruta `add_shedding/{petId}`) y `AddDefecationScreen` (con `AddDefecationViewModel`, ruta `add_defecation/{petId}`).
+- `PetDetailScreen` ahora tiene 7 tabs (con `ScrollableTabRow`): Perfil, **Alimentación** (estadísticas de "última comida" y "tasa de aceptación", tarjetas con fecha+hora/condición/tamaño/peso/duración), **Mudas** (nuevo, entre Alimentación y Defecaciones: promedio de días entre mudas, chip verde/rojo de completitud, días desde la muda anterior), **Defecaciones** (nuevo, entre Mudas y Peso: alerta visual si llevan más de 30 días sin defecar, indicador de color por tipo), Peso, Longitud y Notas.
+- Recordatorio inteligente en el header de `PetDetailScreen`: "Próxima alimentación estimada: [fecha]", calculado a partir del promedio de días entre alimentaciones registradas; se resalta en rojo con ícono de alerta si ya pasaron más días que el promedio + 3.
+
+### Notas técnicas
+
+- La migración de `feeding_logs` reconstruye la tabla completa (crear tabla nueva, copiar datos, borrar la vieja, renombrar) en lugar de usar `ALTER TABLE ADD COLUMN`, porque SQLite en Android no soporta renombrar/eliminar columnas de forma portable; `preyWeight` se copia a `preyWeightGrams` y `time`/`preyCondition`/`preySize` reciben valores por defecto razonables para los registros existentes.
+- El recordatorio de alimentación, la tasa de aceptación, el promedio entre mudas y la alerta de defecación se calculan como funciones puras sobre las listas ya expuestas por `PetDetailViewModel` (sin StateFlows adicionales), siguiendo el mismo patrón que `calculateAge`/`formatDecimal` ya usado en `PetDetailScreen`.
+
 ## Etapa 5 - Biometría completa: peso con variación y longitud
 
 **Fecha:** 2026-07-03

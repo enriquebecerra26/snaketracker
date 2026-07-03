@@ -8,11 +8,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
+import com.enriquebecerra.snaketracker.ui.screens.defecation.AddDefecationScreen
 import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.feeding.AddFeedingScreen
 import com.enriquebecerra.snaketracker.ui.screens.length.AddLengthScreen
 import com.enriquebecerra.snaketracker.ui.screens.petdetail.PetDetailScreen
 import com.enriquebecerra.snaketracker.ui.screens.petlist.PetListScreen
+import com.enriquebecerra.snaketracker.ui.screens.shedding.AddSheddingScreen
 import com.enriquebecerra.snaketracker.ui.screens.weight.AddWeightScreen
 
 @Composable
@@ -53,6 +55,12 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 },
                 onAddLengthClick = { petId ->
                     navController.navigate(Screen.AddLength.createRoute(petId))
+                },
+                onAddSheddingClick = { petId ->
+                    navController.navigate(Screen.AddShedding.createRoute(petId))
+                },
+                onAddDefecationClick = { petId ->
+                    navController.navigate(Screen.AddDefecation.createRoute(petId))
                 }
             )
         }
@@ -92,6 +100,26 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
             arguments = listOf(navArgument("petId") { type = NavType.LongType })
         ) {
             AddLengthScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddShedding.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddSheddingScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddDefecation.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddDefecationScreen(
                 onSaved = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )

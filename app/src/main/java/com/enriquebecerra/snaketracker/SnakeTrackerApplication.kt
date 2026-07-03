@@ -2,9 +2,11 @@ package com.enriquebecerra.snaketracker
 
 import android.app.Application
 import com.enriquebecerra.snaketracker.data.local.database.SnakeTrackerDatabase
+import com.enriquebecerra.snaketracker.data.repository.DefecationRepository
 import com.enriquebecerra.snaketracker.data.repository.FeedingRepository
 import com.enriquebecerra.snaketracker.data.repository.LengthRepository
 import com.enriquebecerra.snaketracker.data.repository.PetRepository
+import com.enriquebecerra.snaketracker.data.repository.SheddingRepository
 import com.enriquebecerra.snaketracker.data.repository.WeightRepository
 
 class SnakeTrackerApplication : Application() {
@@ -27,5 +29,13 @@ class SnakeTrackerApplication : Application() {
 
     val lengthRepository: LengthRepository by lazy {
         LengthRepository(database.lengthLogDao())
+    }
+
+    val sheddingRepository: SheddingRepository by lazy {
+        SheddingRepository(database.sheddingLogDao())
+    }
+
+    val defecationRepository: DefecationRepository by lazy {
+        DefecationRepository(database.defecationLogDao())
     }
 }

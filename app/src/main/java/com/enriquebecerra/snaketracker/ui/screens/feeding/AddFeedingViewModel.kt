@@ -15,9 +15,14 @@ class AddFeedingViewModel(
     val petId: Long = checkNotNull(savedStateHandle["petId"])
 
     fun saveFeedingLog(
+        date: Long,
+        time: String,
         preyType: String,
-        preyWeight: Double,
+        preyCondition: String,
+        preySize: String,
+        preyWeightGrams: Float?,
         accepted: Boolean,
+        durationMinutes: Int?,
         notes: String?,
         onSaved: () -> Unit
     ) {
@@ -25,10 +30,14 @@ class AddFeedingViewModel(
             saveFeedingLogUseCase(
                 FeedingLog(
                     petId = petId,
-                    date = System.currentTimeMillis(),
+                    date = date,
+                    time = time,
                     preyType = preyType,
-                    preyWeight = preyWeight,
+                    preyCondition = preyCondition,
+                    preySize = preySize,
+                    preyWeightGrams = preyWeightGrams,
                     accepted = accepted,
+                    durationMinutes = if (accepted) durationMinutes else null,
                     notes = notes
                 )
             )

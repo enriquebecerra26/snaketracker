@@ -23,4 +23,12 @@ sealed class Screen(val route: String) {
     object AddLength : Screen("add_length/{petId}") {
         fun createRoute(petId: Long) = "add_length/$petId"
     }
+
+    object AddShedding : Screen("add_shedding/{petId}") {
+        fun createRoute(petId: Long) = "add_shedding/$petId"
+    }
+
+    object AddDefecation : Screen("add_defecation/{petId}") {
+        fun createRoute(petId: Long) = "add_defecation/$petId"
+    }
 }

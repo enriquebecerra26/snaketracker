@@ -9,3 +9,6 @@ fun formatDate(millis: Long): String =
 
 fun formatShortDate(millis: Long): String =
     SimpleDateFormat("dd/MM", Locale("es", "ES")).format(Date(millis))
+
+fun formatDateTime(millis: Long, time: String): String =
+    if (time.isBlank()) formatDate(millis) else "${formatDate(millis)} $time"

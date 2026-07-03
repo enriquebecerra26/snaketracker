@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,8 +34,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -53,23 +56,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.enriquebecerra.snaketracker.R
 import com.enriquebecerra.snaketracker.SnakeTrackerApplication
+import com.enriquebecerra.snaketracker.domain.model.DefecationLog
 import com.enriquebecerra.snaketracker.domain.model.FeedingLog
 import com.enriquebecerra.snaketracker.domain.model.LengthLog
 import com.enriquebecerra.snaketracker.domain.model.Pet
+import com.enriquebecerra.snaketracker.domain.model.SheddingLog
 import com.enriquebecerra.snaketracker.domain.model.WeightLog
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetDefecationLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetLengthLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetSheddingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
 import com.enriquebecerra.snaketracker.ui.common.ChartPoint
 import com.enriquebecerra.snaketracker.ui.common.LineChartWithAxis
 import com.enriquebecerra.snaketracker.ui.common.formatDate
+import com.enriquebecerra.snaketracker.ui.common.formatDateTime
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedState
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
-private val tabTitles = listOf("Perfil", "Alimentación", "Peso", "Longitud", "Notas")
+private val tabTitles = listOf("Perfil", "Alimentación", "Mudas", "Defecaciones", "Peso", "Longitud", "Notas")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +89,8 @@ fun PetDetailScreen(
     onAddFeedingClick: (Long) -> Unit,
     onAddWeightClick: (Long) -> Unit,
     onAddLengthClick: (Long) -> Unit,
+    onAddSheddingClick: (Long) -> Unit,
+    onAddDefecationClick: (Long) -> Unit,
     viewModel: PetDetailViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
         PetDetailViewModel(
             savedStateHandle = handle,
@@ -87,6 +98,8 @@ fun PetDetailScreen(
             getFeedingLogsUseCase = GetFeedingLogsUseCase(app.feedingRepository),
             getWeightLogsUseCase = GetWeightLogsUseCase(app.weightRepository),
             getLengthLogsUseCase = GetLengthLogsUseCase(app.lengthRepository),
+            getSheddingLogsUseCase = GetSheddingLogsUseCase(app.sheddingRepository),
+            getDefecationLogsUseCase = GetDefecationLogsUseCase(app.defecationRepository),
             savePetUseCase = SavePetUseCase(app.petRepository),
             deletePetUseCase = DeletePetUseCase(app.petRepository)
         )
@@ -96,6 +109,8 @@ fun PetDetailScreen(
     val feedingLogs by viewModel.feedingLogs.collectAsStateWithLifecycle()
     val weightLogs by viewModel.weightLogs.collectAsStateWithLifecycle()
     val lengthLogs by viewModel.lengthLogs.collectAsStateWithLifecycle()
+    val sheddingLogs by viewModel.sheddingLogs.collectAsStateWithLifecycle()
+    val defecationLogs by viewModel.defecationLogs.collectAsStateWithLifecycle()
     val currentWeight by viewModel.currentWeight.collectAsStateWithLifecycle()
     val currentLength by viewModel.currentLength.collectAsStateWithLifecycle()
     val weightVariation by viewModel.weightVariation.collectAsStateWithLifecycle()
@@ -135,13 +150,27 @@ fun PetDetailScreen(
                     Icon(Icons.Default.Add, contentDescription = "Registrar alimentación")
                 }
                 2 -> FloatingActionButton(
+                    onClick = { onAddSheddingClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar muda")
+                }
+                3 -> FloatingActionButton(
+                    onClick = { onAddDefecationClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar defecación")
+                }
+                4 -> FloatingActionButton(
                     onClick = { onAddWeightClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar peso")
                 }
-                3 -> FloatingActionButton(
+                5 -> FloatingActionButton(
                     onClick = { onAddLengthClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -157,12 +186,13 @@ fun PetDetailScreen(
             Box(modifier = Modifier.fillMaxSize().padding(padding))
         } else {
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                PetHeader(pet = currentPet, currentWeight = currentWeight)
+                PetHeader(pet = currentPet, currentWeight = currentWeight, feedingLogs = feedingLogs)
 
-                TabRow(
+                ScrollableTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    edgePadding = 12.dp
                 ) {
                     tabTitles.forEachIndexed { index, title ->
                         Tab(
@@ -176,17 +206,19 @@ fun PetDetailScreen(
                 when (selectedTab) {
                     0 -> ProfileTab(pet = currentPet, modifier = Modifier.weight(1f))
                     1 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
-                    2 -> WeightTab(
+                    2 -> SheddingTab(sheddingLogs = sheddingLogs, modifier = Modifier.weight(1f))
+                    3 -> DefecationTab(defecationLogs = defecationLogs, modifier = Modifier.weight(1f))
+                    4 -> WeightTab(
                         weightLogs = weightLogs,
                         weightVariation = weightVariation,
                         modifier = Modifier.weight(1f)
                     )
-                    3 -> LengthTab(
+                    5 -> LengthTab(
                         lengthLogs = lengthLogs,
                         currentLength = currentLength,
                         modifier = Modifier.weight(1f)
                     )
-                    4 -> NotesTab(
+                    6 -> NotesTab(
                         notes = currentPet.notes,
                         onSave = viewModel::updateNotes,
                         modifier = Modifier.weight(1f)
@@ -198,7 +230,9 @@ fun PetDetailScreen(
 }
 
 @Composable
-private fun PetHeader(pet: Pet, currentWeight: Double) {
+private fun PetHeader(pet: Pet, currentWeight: Double, feedingLogs: List<FeedingLog>) {
+    val feedingReminder = remember(feedingLogs) { computeFeedingReminder(feedingLogs) }
+
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -247,6 +281,48 @@ private fun PetHeader(pet: Pet, currentWeight: Double) {
             HeaderStat(label = "Edad", value = calculateAge(pet.birthDate))
             HeaderStat(label = "Peso actual", value = "${formatDecimal(currentWeight)} g")
         }
+
+        feedingReminder?.let { FeedingReminderBanner(it) }
+    }
+}
+
+@Composable
+private fun FeedingReminderBanner(reminder: FeedingReminder) {
+    val containerColor = if (reminder.isOverdue) {
+        MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val contentColor = if (reminder.isOverdue) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(containerColor)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (reminder.isOverdue) {
+            Icon(
+                Icons.Default.Warning,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Text(
+            text = "Próxima alimentación estimada: ${formatDate(reminder.estimatedDate)}",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (reminder.isOverdue) FontWeight.SemiBold else FontWeight.Normal,
+            color = contentColor,
+            modifier = Modifier.padding(start = if (reminder.isOverdue) 6.dp else 0.dp)
+        )
     }
 }
 
@@ -268,18 +344,54 @@ private fun HeaderStat(label: String, value: String) {
 }
 
 @Composable
+private fun StatusChip(text: String, positive: Boolean) {
+    val containerColor = if (positive) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+    }
+    val contentColor = if (positive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(containerColor)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelMedium, color = contentColor)
+    }
+}
+
+@Composable
 private fun FeedingTab(feedingLogs: List<FeedingLog>, modifier: Modifier = Modifier) {
     if (feedingLogs.isEmpty()) {
         EmptyTabState(text = "Sin registros de alimentación", modifier = modifier)
         return
     }
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 88.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(feedingLogs, key = { it.id }) { log ->
-            FeedingLogCard(log)
+    val daysSinceLast = remember(feedingLogs) { daysSinceLastFeeding(feedingLogs) }
+    val acceptanceRate = remember(feedingLogs) { acceptanceRatePercent(feedingLogs) }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            HeaderStat(
+                label = "Última comida",
+                value = daysSinceLast?.let { lastFeedingLabel(it) } ?: "—"
+            )
+            HeaderStat(
+                label = "Tasa de aceptación",
+                value = acceptanceRate?.let { "$it%" } ?: "—"
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(feedingLogs, key = { it.id }) { log ->
+                FeedingLogCard(log)
+            }
         }
     }
 }
@@ -297,7 +409,7 @@ private fun FeedingLogCard(log: FeedingLog) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = formatDate(log.date),
+                    text = formatDateTime(log.date, log.time),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -308,10 +420,26 @@ private fun FeedingLogCard(log: FeedingLog) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${formatDecimal(log.preyWeight)} g",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "${log.preyCondition} • ${log.preySize}",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                log.preyWeightGrams?.let { weightGrams ->
+                    Text(
+                        text = "${formatDecimal(weightGrams.toDouble())} g",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (log.accepted) {
+                    log.durationMinutes?.let { duration ->
+                        Text(
+                            text = "Tardó $duration min",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             if (log.accepted) {
                 Icon(
@@ -325,6 +453,169 @@ private fun FeedingLogCard(log: FeedingLog) {
                     contentDescription = "Rechazó",
                     tint = MaterialTheme.colorScheme.error
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SheddingTab(sheddingLogs: List<SheddingLog>, modifier: Modifier = Modifier) {
+    if (sheddingLogs.isEmpty()) {
+        EmptyTabState(text = "Sin registros de mudas", modifier = modifier)
+        return
+    }
+    val averageInterval = remember(sheddingLogs) { computeAverageSheddingInterval(sheddingLogs) }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = averageInterval?.let { "Promedio entre mudas: $it días" } ?: "Registra al menos 2 mudas para ver el promedio",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        )
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            itemsIndexed(sheddingLogs, key = { _, log -> log.id }) { index, log ->
+                val daysSincePrevious = sheddingLogs.getOrNull(index + 1)?.let { previous ->
+                    TimeUnit.MILLISECONDS.toDays(log.completedDate - previous.completedDate).toInt()
+                }
+                SheddingLogCard(log, daysSincePrevious)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SheddingLogCard(log: SheddingLog, daysSincePrevious: Int?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = formatDate(log.completedDate),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = daysSincePrevious?.let { "$it días desde la muda anterior" } ?: "Primera muda registrada",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (!log.problems.isNullOrBlank()) {
+                    Text(
+                        text = "Problemas: ${log.problems}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            StatusChip(text = if (log.wasComplete) "Completa" else "Incompleta", positive = log.wasComplete)
+        }
+    }
+}
+
+@Composable
+private fun DefecationTab(defecationLogs: List<DefecationLog>, modifier: Modifier = Modifier) {
+    if (defecationLogs.isEmpty()) {
+        EmptyTabState(text = "Sin registros de defecaciones", modifier = modifier)
+        return
+    }
+    val daysSinceLast = remember(defecationLogs) {
+        defecationLogs.maxByOrNull { it.date }?.let {
+            TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - it.date).toInt()
+        }
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        if (daysSinceLast != null && daysSinceLast > 30) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.15f))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "Lleva $daysSinceLast días sin defecar",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(defecationLogs, key = { it.id }) { log ->
+                DefecationLogRow(log)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DefecationLogRow(log: DefecationLog) {
+    val indicatorColor = when (log.type) {
+        "Normal" -> MaterialTheme.colorScheme.primary
+        "Uratos" -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.secondary
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(indicatorColor)
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                Text(
+                    text = formatDate(log.date),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = log.type,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = indicatorColor
+                )
+                if (!log.notes.isNullOrBlank()) {
+                    Text(
+                        text = log.notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -554,6 +845,49 @@ private fun ProfileField(label: String, value: String) {
         )
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+}
+
+private data class FeedingReminder(val estimatedDate: Long, val isOverdue: Boolean)
+
+private fun computeFeedingReminder(logs: List<FeedingLog>): FeedingReminder? {
+    if (logs.size < 2) return null
+    val sorted = logs.sortedBy { it.date }
+    val intervalsDays = sorted.zipWithNext { a, b -> TimeUnit.MILLISECONDS.toDays(b.date - a.date) }
+        .filter { it > 0 }
+    if (intervalsDays.isEmpty()) return null
+
+    val averageDays = intervalsDays.average()
+    val lastDate = sorted.last().date
+    val estimatedDate = lastDate + TimeUnit.DAYS.toMillis(averageDays.toLong())
+    val daysSinceLast = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - lastDate)
+    val isOverdue = daysSinceLast > averageDays + 3
+    return FeedingReminder(estimatedDate = estimatedDate, isOverdue = isOverdue)
+}
+
+private fun daysSinceLastFeeding(logs: List<FeedingLog>): Int? {
+    val last = logs.maxByOrNull { it.date } ?: return null
+    return TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - last.date).toInt()
+}
+
+private fun lastFeedingLabel(days: Int): String = when {
+    days <= 0 -> "Hoy"
+    days == 1 -> "Hace 1 día"
+    else -> "Hace $days días"
+}
+
+private fun acceptanceRatePercent(logs: List<FeedingLog>): Int? {
+    if (logs.isEmpty()) return null
+    return (logs.count { it.accepted } * 100) / logs.size
+}
+
+private fun computeAverageSheddingInterval(logs: List<SheddingLog>): Int? {
+    if (logs.size < 2) return null
+    val sorted = logs.sortedBy { it.completedDate }
+    val intervals = sorted.zipWithNext { a, b ->
+        TimeUnit.MILLISECONDS.toDays(b.completedDate - a.completedDate)
+    }
+    if (intervals.isEmpty()) return null
+    return intervals.average().toInt()
 }
 
 private fun calculateAge(birthDateMillis: Long): String {

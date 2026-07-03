@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "feeding_logs",
+    tableName = "defecation_logs",
     foreignKeys = [
         ForeignKey(
             entity = Pet::class,
@@ -17,17 +17,11 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index("petId")]
 )
-data class FeedingLog(
+data class DefecationLog(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val petId: Long,
     val date: Long,
-    val time: String,
-    val preyType: String,
-    val preyCondition: String,
-    val preySize: String,
-    val preyWeightGrams: Float? = null,
-    val accepted: Boolean,
-    val durationMinutes: Int? = null,
+    val type: String,
     val notes: String? = null
 )

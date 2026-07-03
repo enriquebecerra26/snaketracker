@@ -3,14 +3,18 @@ package com.enriquebecerra.snaketracker.ui.screens.petdetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.enriquebecerra.snaketracker.domain.model.DefecationLog
 import com.enriquebecerra.snaketracker.domain.model.FeedingLog
 import com.enriquebecerra.snaketracker.domain.model.LengthLog
 import com.enriquebecerra.snaketracker.domain.model.Pet
+import com.enriquebecerra.snaketracker.domain.model.SheddingLog
 import com.enriquebecerra.snaketracker.domain.model.WeightLog
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetDefecationLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetLengthLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetSheddingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
 import java.util.Locale
@@ -28,6 +32,8 @@ class PetDetailViewModel(
     getFeedingLogsUseCase: GetFeedingLogsUseCase,
     getWeightLogsUseCase: GetWeightLogsUseCase,
     getLengthLogsUseCase: GetLengthLogsUseCase,
+    getSheddingLogsUseCase: GetSheddingLogsUseCase,
+    getDefecationLogsUseCase: GetDefecationLogsUseCase,
     private val savePetUseCase: SavePetUseCase,
     private val deletePetUseCase: DeletePetUseCase
 ) : ViewModel() {
@@ -46,6 +52,14 @@ class PetDetailViewModel(
 
     // Ordenado por fecha descendente desde el DAO (más reciente primero)
     val lengthLogs: StateFlow<List<LengthLog>> = getLengthLogsUseCase(petId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Ordenado por fecha completada descendente desde el DAO (más reciente primero)
+    val sheddingLogs: StateFlow<List<SheddingLog>> = getSheddingLogsUseCase(petId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Ordenado por fecha descendente desde el DAO (más reciente primero)
+    val defecationLogs: StateFlow<List<DefecationLog>> = getDefecationLogsUseCase(petId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val currentWeight: StateFlow<Double> = combine(pet, weightLogs) { currentPet, logs ->

@@ -17,13 +17,22 @@ data class Pet(
     val notes: String? = null
 )
 
+val PreyTypeOptions = listOf("Ratón", "Rata", "ASF", "Conejo", "Pollito", "Otro")
+val PreyConditionOptions = listOf("Viva", "Fresca", "Congelada-Descongelada")
+val PreySizeOptions = listOf("Pequeña", "Mediana", "Grande", "Extra")
+val DefecationTypeOptions = listOf("Normal", "Uratos", "Ambos")
+
 data class FeedingLog(
     val id: Long = 0,
     val petId: Long,
     val date: Long,
+    val time: String,
     val preyType: String,
-    val preyWeight: Double,
+    val preyCondition: String,
+    val preySize: String,
+    val preyWeightGrams: Float? = null,
     val accepted: Boolean,
+    val durationMinutes: Int? = null,
     val notes: String? = null
 )
 
@@ -40,6 +49,26 @@ data class LengthLog(
     val petId: Long,
     val date: Long,
     val lengthCm: Float,
+    val notes: String? = null
+)
+
+data class SheddingLog(
+    val id: Long = 0,
+    val petId: Long,
+    val bluePhaseStart: Long? = null,
+    val sheddingStart: Long? = null,
+    val completedDate: Long,
+    val wasComplete: Boolean,
+    val problems: String? = null,
+    val humidityPercent: Int? = null,
+    val notes: String? = null
+)
+
+data class DefecationLog(
+    val id: Long = 0,
+    val petId: Long,
+    val date: Long,
+    val type: String,
     val notes: String? = null
 )
 
