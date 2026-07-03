@@ -10,11 +10,15 @@ import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.defecation.AddDefecationScreen
 import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
+import com.enriquebecerra.snaketracker.ui.screens.expense.AddExpenseScreen
+import com.enriquebecerra.snaketracker.ui.screens.expense.GastosScreen
 import com.enriquebecerra.snaketracker.ui.screens.feeding.AddFeedingScreen
+import com.enriquebecerra.snaketracker.ui.screens.health.AddHealthRecordScreen
 import com.enriquebecerra.snaketracker.ui.screens.length.AddLengthScreen
 import com.enriquebecerra.snaketracker.ui.screens.petdetail.PetDetailScreen
 import com.enriquebecerra.snaketracker.ui.screens.petlist.PetListScreen
 import com.enriquebecerra.snaketracker.ui.screens.shedding.AddSheddingScreen
+import com.enriquebecerra.snaketracker.ui.screens.terrarium.AddTerrariumLogScreen
 import com.enriquebecerra.snaketracker.ui.screens.weight.AddWeightScreen
 
 @Composable
@@ -26,7 +30,8 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 onAddPetClick = { navController.navigate(Screen.AddPet.route) },
                 onPetClick = { petId ->
                     navController.navigate(Screen.PetDetail.createRoute(petId))
-                }
+                },
+                onExpensesClick = { navController.navigate(Screen.Expenses.route) }
             )
         }
 
@@ -61,6 +66,12 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 },
                 onAddDefecationClick = { petId ->
                     navController.navigate(Screen.AddDefecation.createRoute(petId))
+                },
+                onAddHealthClick = { petId ->
+                    navController.navigate(Screen.AddHealth.createRoute(petId))
+                },
+                onAddTerrariumClick = { petId ->
+                    navController.navigate(Screen.AddTerrarium.createRoute(petId))
                 }
             )
         }
@@ -120,6 +131,40 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
             arguments = listOf(navArgument("petId") { type = NavType.LongType })
         ) {
             AddDefecationScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddHealth.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddHealthRecordScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddTerrarium.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddTerrariumLogScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Expenses.route) {
+            GastosScreen(
+                onBackClick = { navController.popBackStack() },
+                onAddExpenseClick = { navController.navigate(Screen.AddExpense.route) }
+            )
+        }
+
+        composable(Screen.AddExpense.route) {
+            AddExpenseScreen(
                 onSaved = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )

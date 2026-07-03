@@ -22,7 +22,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +50,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +62,20 @@ import com.enriquebecerra.snaketracker.R
 import com.enriquebecerra.snaketracker.SnakeTrackerApplication
 import com.enriquebecerra.snaketracker.domain.model.DefecationLog
 import com.enriquebecerra.snaketracker.domain.model.FeedingLog
+import com.enriquebecerra.snaketracker.domain.model.HealthRecord
 import com.enriquebecerra.snaketracker.domain.model.LengthLog
 import com.enriquebecerra.snaketracker.domain.model.Pet
 import com.enriquebecerra.snaketracker.domain.model.SheddingLog
+import com.enriquebecerra.snaketracker.domain.model.TerrariumLog
 import com.enriquebecerra.snaketracker.domain.model.WeightLog
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetDefecationLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetHealthRecordsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetLengthLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetSheddingLogsUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetTerrariumLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
 import com.enriquebecerra.snaketracker.ui.common.ChartPoint
@@ -78,7 +86,9 @@ import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedS
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-private val tabTitles = listOf("Perfil", "Alimentación", "Mudas", "Defecaciones", "Peso", "Longitud", "Notas")
+private val tabTitles = listOf(
+    "Perfil", "Alimentación", "Mudas", "Defecaciones", "Salud", "Terrario", "Peso", "Longitud", "Notas"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +101,8 @@ fun PetDetailScreen(
     onAddLengthClick: (Long) -> Unit,
     onAddSheddingClick: (Long) -> Unit,
     onAddDefecationClick: (Long) -> Unit,
+    onAddHealthClick: (Long) -> Unit,
+    onAddTerrariumClick: (Long) -> Unit,
     viewModel: PetDetailViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
         PetDetailViewModel(
             savedStateHandle = handle,
@@ -100,6 +112,8 @@ fun PetDetailScreen(
             getLengthLogsUseCase = GetLengthLogsUseCase(app.lengthRepository),
             getSheddingLogsUseCase = GetSheddingLogsUseCase(app.sheddingRepository),
             getDefecationLogsUseCase = GetDefecationLogsUseCase(app.defecationRepository),
+            getHealthRecordsUseCase = GetHealthRecordsUseCase(app.healthRepository),
+            getTerrariumLogsUseCase = GetTerrariumLogsUseCase(app.terrariumRepository),
             savePetUseCase = SavePetUseCase(app.petRepository),
             deletePetUseCase = DeletePetUseCase(app.petRepository)
         )
@@ -111,6 +125,8 @@ fun PetDetailScreen(
     val lengthLogs by viewModel.lengthLogs.collectAsStateWithLifecycle()
     val sheddingLogs by viewModel.sheddingLogs.collectAsStateWithLifecycle()
     val defecationLogs by viewModel.defecationLogs.collectAsStateWithLifecycle()
+    val healthRecords by viewModel.healthRecords.collectAsStateWithLifecycle()
+    val terrariumLogs by viewModel.terrariumLogs.collectAsStateWithLifecycle()
     val currentWeight by viewModel.currentWeight.collectAsStateWithLifecycle()
     val currentLength by viewModel.currentLength.collectAsStateWithLifecycle()
     val weightVariation by viewModel.weightVariation.collectAsStateWithLifecycle()
@@ -164,13 +180,27 @@ fun PetDetailScreen(
                     Icon(Icons.Default.Add, contentDescription = "Registrar defecación")
                 }
                 4 -> FloatingActionButton(
+                    onClick = { onAddHealthClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar salud")
+                }
+                5 -> FloatingActionButton(
+                    onClick = { onAddTerrariumClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar terrario")
+                }
+                6 -> FloatingActionButton(
                     onClick = { onAddWeightClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar peso")
                 }
-                5 -> FloatingActionButton(
+                7 -> FloatingActionButton(
                     onClick = { onAddLengthClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -208,17 +238,19 @@ fun PetDetailScreen(
                     1 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
                     2 -> SheddingTab(sheddingLogs = sheddingLogs, modifier = Modifier.weight(1f))
                     3 -> DefecationTab(defecationLogs = defecationLogs, modifier = Modifier.weight(1f))
-                    4 -> WeightTab(
+                    4 -> HealthTab(healthRecords = healthRecords, modifier = Modifier.weight(1f))
+                    5 -> TerrariumTab(terrariumLogs = terrariumLogs, modifier = Modifier.weight(1f))
+                    6 -> WeightTab(
                         weightLogs = weightLogs,
                         weightVariation = weightVariation,
                         modifier = Modifier.weight(1f)
                     )
-                    5 -> LengthTab(
+                    7 -> LengthTab(
                         lengthLogs = lengthLogs,
                         currentLength = currentLength,
                         modifier = Modifier.weight(1f)
                     )
-                    6 -> NotesTab(
+                    8 -> NotesTab(
                         notes = currentPet.notes,
                         onSave = viewModel::updateNotes,
                         modifier = Modifier.weight(1f)
@@ -616,6 +648,273 @@ private fun DefecationLogRow(log: DefecationLog) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HealthTab(healthRecords: List<HealthRecord>, modifier: Modifier = Modifier) {
+    if (healthRecords.isEmpty()) {
+        EmptyTabState(text = "Sin registros de salud", modifier = modifier)
+        return
+    }
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 88.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(healthRecords, key = { it.id }) { record ->
+            HealthRecordCard(record)
+        }
+    }
+}
+
+@Composable
+private fun HealthRecordCard(record: HealthRecord) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColoredChip(text = record.type, color = colorForHealthType(record.type))
+                if (!record.resolved) {
+                    StatusChip(text = "Pendiente", positive = false)
+                }
+            }
+            Text(
+                text = formatDate(record.date),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Text(
+                text = record.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (!record.description.isNullOrBlank()) {
+                Text(
+                    text = record.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!record.vetName.isNullOrBlank()) {
+                Text(
+                    text = "Veterinario: ${record.vetName}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!record.medication.isNullOrBlank()) {
+                val dosageSuffix = record.dosage?.let { " ($it)" } ?: ""
+                Text(
+                    text = "Medicamento: ${record.medication}$dosageSuffix",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            record.nextVisitDate?.let { nextVisitDate ->
+                Text(
+                    text = "Próxima visita: ${formatDate(nextVisitDate)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColoredChip(text: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(color.copy(alpha = 0.2f))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelMedium, color = color)
+    }
+}
+
+private fun colorForHealthType(type: String): Color = when (type) {
+    "Enfermedad" -> Color(0xFFE57373)
+    "Visita veterinario" -> Color(0xFF64B5F6)
+    "Medicamento" -> Color(0xFFFFB74D)
+    "Cirugía" -> Color(0xFFBA68C8)
+    "Desparasitación" -> Color(0xFF4DB6AC)
+    "Tratamiento" -> Color(0xFF81C784)
+    else -> Color(0xFF9E9E9E)
+}
+
+private enum class AlertLevel { NONE, WARNING, ERROR }
+
+@Composable
+private fun TerrariumTab(terrariumLogs: List<TerrariumLog>, modifier: Modifier = Modifier) {
+    if (terrariumLogs.isEmpty()) {
+        EmptyTabState(text = "Sin registros de terrario", modifier = modifier)
+        return
+    }
+    val latest = remember(terrariumLogs) { terrariumLogs.maxByOrNull { it.date } }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        latest?.let { TerrariumSummaryRow(it) }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(terrariumLogs, key = { it.id }) { log ->
+                TerrariumLogCard(log)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TerrariumSummaryRow(log: TerrariumLog) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val hotAlert = log.hotSpotTemp?.let { it < 28f || it > 32f } ?: false
+        TerrariumStatCard(
+            icon = Icons.Default.Thermostat,
+            label = "Punto caliente",
+            value = log.hotSpotTemp?.let { "${formatDecimal(it.toDouble())}°C" } ?: "—",
+            alertLevel = if (hotAlert) AlertLevel.ERROR else AlertLevel.NONE,
+            modifier = Modifier.weight(1f)
+        )
+        TerrariumStatCard(
+            icon = Icons.Default.Thermostat,
+            label = "Lado frío",
+            value = log.coldSideTemp?.let { "${formatDecimal(it.toDouble())}°C" } ?: "—",
+            alertLevel = AlertLevel.NONE,
+            modifier = Modifier.weight(1f)
+        )
+        val humidityAlert = log.humidityPercent?.let { it < 50 } ?: false
+        TerrariumStatCard(
+            icon = Icons.Default.WaterDrop,
+            label = "Humedad",
+            value = log.humidityPercent?.let { "$it%" } ?: "—",
+            alertLevel = if (humidityAlert) AlertLevel.WARNING else AlertLevel.NONE,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun TerrariumStatCard(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    alertLevel: AlertLevel,
+    modifier: Modifier = Modifier
+) {
+    val color = when (alertLevel) {
+        AlertLevel.ERROR -> MaterialTheme.colorScheme.error
+        AlertLevel.WARNING -> Color(0xFFFFA726)
+        AlertLevel.NONE -> MaterialTheme.colorScheme.primary
+    }
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = color,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TerrariumLogCard(log: TerrariumLog) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            Text(
+                text = formatDate(log.date),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            log.hotSpotTemp?.let {
+                Text(
+                    text = "Punto caliente: ${formatDecimal(it.toDouble())}°C",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            log.coldSideTemp?.let {
+                Text(
+                    text = "Lado frío: ${formatDecimal(it.toDouble())}°C",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            log.humidityPercent?.let {
+                Text(
+                    text = "Humedad: $it%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!log.substrateType.isNullOrBlank()) {
+                Text(
+                    text = "Sustrato: ${log.substrateType}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (log.substrateChangedDate != null) {
+                Text(
+                    text = "Sustrato cambiado",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (!log.heatSource.isNullOrBlank()) {
+                Text(
+                    text = "Fuente de calor: ${log.heatSource}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!log.notes.isNullOrBlank()) {
+                Text(
+                    text = log.notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

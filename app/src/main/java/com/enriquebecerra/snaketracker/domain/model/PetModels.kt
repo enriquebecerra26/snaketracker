@@ -72,6 +72,53 @@ data class DefecationLog(
     val notes: String? = null
 )
 
+val HealthRecordTypeOptions = listOf(
+    "Enfermedad",
+    "Medicamento",
+    "Cirugía",
+    "Desparasitación",
+    "Tratamiento",
+    "Visita veterinario"
+)
+val ExpenseCategoryOptions = listOf("Alimento", "Veterinario", "Terrario", "Calefacción", "Accesorios", "Otro")
+
+data class HealthRecord(
+    val id: Long = 0,
+    val petId: Long,
+    val date: Long,
+    val type: String,
+    val title: String,
+    val description: String? = null,
+    val vetName: String? = null,
+    val medication: String? = null,
+    val dosage: String? = null,
+    val nextVisitDate: Long? = null,
+    val resolved: Boolean = false
+)
+
+data class TerrariumLog(
+    val id: Long = 0,
+    val petId: Long,
+    val date: Long,
+    val hotSpotTemp: Float? = null,
+    val coldSideTemp: Float? = null,
+    val humidityPercent: Int? = null,
+    val substrateType: String? = null,
+    val substrateChangedDate: Long? = null,
+    val heatSource: String? = null,
+    val notes: String? = null
+)
+
+data class ExpenseRecord(
+    val id: Long = 0,
+    val petId: Long? = null,
+    val date: Long,
+    val category: String,
+    val description: String,
+    val amountMXN: Float,
+    val notes: String? = null
+)
+
 data class PetListItem(
     val pet: Pet,
     val daysSinceLastFeeding: Int?

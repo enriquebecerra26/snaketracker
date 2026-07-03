@@ -3,10 +3,13 @@ package com.enriquebecerra.snaketracker
 import android.app.Application
 import com.enriquebecerra.snaketracker.data.local.database.SnakeTrackerDatabase
 import com.enriquebecerra.snaketracker.data.repository.DefecationRepository
+import com.enriquebecerra.snaketracker.data.repository.ExpenseRepository
 import com.enriquebecerra.snaketracker.data.repository.FeedingRepository
+import com.enriquebecerra.snaketracker.data.repository.HealthRepository
 import com.enriquebecerra.snaketracker.data.repository.LengthRepository
 import com.enriquebecerra.snaketracker.data.repository.PetRepository
 import com.enriquebecerra.snaketracker.data.repository.SheddingRepository
+import com.enriquebecerra.snaketracker.data.repository.TerrariumRepository
 import com.enriquebecerra.snaketracker.data.repository.WeightRepository
 
 class SnakeTrackerApplication : Application() {
@@ -37,5 +40,17 @@ class SnakeTrackerApplication : Application() {
 
     val defecationRepository: DefecationRepository by lazy {
         DefecationRepository(database.defecationLogDao())
+    }
+
+    val healthRepository: HealthRepository by lazy {
+        HealthRepository(database.healthRecordDao())
+    }
+
+    val terrariumRepository: TerrariumRepository by lazy {
+        TerrariumRepository(database.terrariumLogDao())
+    }
+
+    val expenseRepository: ExpenseRepository by lazy {
+        ExpenseRepository(database.expenseRecordDao())
     }
 }

@@ -2,6 +2,26 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 7 - Salud, Terrario y Gastos
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- Nuevas entidades Room `HealthRecord` (tipo, título, descripción, veterinario, medicamento/dosis, próxima visita, resuelto), `TerrariumLog` (temperaturas punto caliente/lado frío, humedad, sustrato y su fecha de cambio, fuente de calor) y `ExpenseRecord` (categoría, descripción, monto en MXN, mascota asociada opcional para gastos "generales"). DAOs (`insert`, `getByPetId`/`getAll`, `deleteById`) y repositorios para las tres. `MIGRATION_4_5` (versión 5) crea las tablas nuevas; `ExpenseRecord.petId` usa `ON DELETE SET NULL` para conservar el historial de gastos si se elimina la mascota asociada.
+- Nuevos casos de uso para salud, terrario y gastos (`Get`/`Save`/`Delete`), y sus repositorios expuestos desde `SnakeTrackerApplication`.
+- Nueva pantalla `AddHealthRecordScreen` (con `AddHealthRecordViewModel`, ruta `add_health/{petId}`): tipo por chips, título obligatorio, fecha, descripción, veterinario, medicamento/dosis (solo si el tipo es Medicamento o Tratamiento), próxima visita opcional y switch de resuelto.
+- Nueva pantalla `AddTerrariumLogScreen` (con `AddTerrariumLogViewModel`, ruta `add_terrarium/{petId}`): temperaturas y humedad, sustrato, switch "¿Se cambió el sustrato hoy?" que registra la fecha, fuente de calor y notas.
+- Nueva pantalla `AddExpenseScreen` (con `AddExpenseViewModel`, ruta `add_expense`, sin `petId`): fecha, categoría por chips, descripción y monto obligatorios, dropdown de mascota asociada (con opción "General") poblado con `GetPetsUseCase`.
+- Nueva pantalla `GastosScreen` (con `GastosViewModel`, ruta `expenses`, accesible desde el ícono "$" en el `TopAppBar` de `PetListScreen`): total anual destacado, gráfica de barras por categoría del año en curso (nuevo componente `BarChart` en `ui/common`, Canvas nativo de Compose), filtro por mascota/General/Todas con chips, y lista de gastos descendente por fecha.
+- `PetDetailScreen` ahora tiene 9 tabs: se agregaron **Salud** (después de Defecaciones: chip de color por tipo, badge "Pendiente" si no está resuelto, próxima visita destacada) y **Terrario** (después de Salud: cards de temperatura/humedad del último registro con alertas visuales — rojo si la temperatura del punto caliente está fuera de 28–32°C, naranja si la humedad es menor a 50% — más el historial completo).
+- `PetDetailViewModel` ampliado con `healthRecords` y `terrariumLogs` como `StateFlow`.
+
+### Notas técnicas
+
+- Los colores de los chips de tipo de registro de salud (rojo/azul/naranja/etc.) usan valores literales en lugar de roles del `ColorScheme`, ya que actúan como código de color semántico (tipo de evento médico) y no como parte de la identidad visual de la app; el tema oscuro verde/terrario se mantiene en el resto de la UI.
+- El resumen anual y la gráfica de gastos por categoría se calculan en el propio `GastosScreen` a partir de la lista completa de `ExpenseRecord` ya expuesta por el ViewModel (filtrando por año), sin necesidad de una consulta SQL adicional.
+
 ## Etapa 6 - Alimentación avanzada, mudas y defecaciones
 
 **Fecha:** 2026-07-03

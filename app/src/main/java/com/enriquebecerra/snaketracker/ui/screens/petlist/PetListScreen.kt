@@ -16,11 +16,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,6 +55,7 @@ import com.enriquebecerra.snaketracker.ui.theme.SnakeTrackerTheme
 fun PetListScreen(
     onAddPetClick: () -> Unit,
     onPetClick: (Long) -> Unit,
+    onExpensesClick: () -> Unit,
     viewModel: PetListViewModel = snakeTrackerViewModel { app: SnakeTrackerApplication ->
         PetListViewModel(
             getPetListItemsUseCase = GetPetListItemsUseCase(app.petRepository, app.feedingRepository),
@@ -66,6 +69,11 @@ fun PetListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Mis mascotas") },
+                actions = {
+                    IconButton(onClick = onExpensesClick) {
+                        Icon(Icons.Default.AttachMoney, contentDescription = "Gastos")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface

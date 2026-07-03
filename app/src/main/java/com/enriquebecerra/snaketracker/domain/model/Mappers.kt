@@ -1,10 +1,13 @@
 package com.enriquebecerra.snaketracker.domain.model
 
 import com.enriquebecerra.snaketracker.data.local.entity.DefecationLog as DefecationLogEntity
+import com.enriquebecerra.snaketracker.data.local.entity.ExpenseRecord as ExpenseRecordEntity
 import com.enriquebecerra.snaketracker.data.local.entity.FeedingLog as FeedingLogEntity
+import com.enriquebecerra.snaketracker.data.local.entity.HealthRecord as HealthRecordEntity
 import com.enriquebecerra.snaketracker.data.local.entity.LengthLog as LengthLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.Pet as PetEntity
 import com.enriquebecerra.snaketracker.data.local.entity.SheddingLog as SheddingLogEntity
+import com.enriquebecerra.snaketracker.data.local.entity.TerrariumLog as TerrariumLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.WeightLog as WeightLogEntity
 
 fun PetEntity.toDomain() = Pet(
@@ -134,5 +137,79 @@ fun DefecationLog.toEntity() = DefecationLogEntity(
     petId = petId,
     date = date,
     type = type,
+    notes = notes
+)
+
+fun HealthRecordEntity.toDomain() = HealthRecord(
+    id = id,
+    petId = petId,
+    date = date,
+    type = type,
+    title = title,
+    description = description,
+    vetName = vetName,
+    medication = medication,
+    dosage = dosage,
+    nextVisitDate = nextVisitDate,
+    resolved = resolved
+)
+
+fun HealthRecord.toEntity() = HealthRecordEntity(
+    id = id,
+    petId = petId,
+    date = date,
+    type = type,
+    title = title,
+    description = description,
+    vetName = vetName,
+    medication = medication,
+    dosage = dosage,
+    nextVisitDate = nextVisitDate,
+    resolved = resolved
+)
+
+fun TerrariumLogEntity.toDomain() = TerrariumLog(
+    id = id,
+    petId = petId,
+    date = date,
+    hotSpotTemp = hotSpotTemp,
+    coldSideTemp = coldSideTemp,
+    humidityPercent = humidityPercent,
+    substrateType = substrateType,
+    substrateChangedDate = substrateChangedDate,
+    heatSource = heatSource,
+    notes = notes
+)
+
+fun TerrariumLog.toEntity() = TerrariumLogEntity(
+    id = id,
+    petId = petId,
+    date = date,
+    hotSpotTemp = hotSpotTemp,
+    coldSideTemp = coldSideTemp,
+    humidityPercent = humidityPercent,
+    substrateType = substrateType,
+    substrateChangedDate = substrateChangedDate,
+    heatSource = heatSource,
+    notes = notes
+)
+
+fun ExpenseRecordEntity.toDomain() = ExpenseRecord(
+    id = id,
+    petId = petId,
+    date = date,
+    category = category,
+    description = description,
+    amountMXN = amountMXN,
+    notes = notes
+)
+
+fun ExpenseRecord.toEntity() = ExpenseRecordEntity(
+    id = id,
+    petId = petId,
+    date = date,
+    category = category,
+    description = description,
+    amountMXN = amountMXN,
     notes = notes
 )
