@@ -49,13 +49,6 @@ class PetDetailViewModel(
         }
     }
 
-    fun updateProfile(name: String, species: String, birthDate: Long) {
-        val currentPet = pet.value ?: return
-        viewModelScope.launch {
-            savePetUseCase(currentPet.copy(name = name, species = species, birthDate = birthDate))
-        }
-    }
-
     fun deletePet(onDeleted: () -> Unit) {
         val currentPet = pet.value ?: return
         viewModelScope.launch {

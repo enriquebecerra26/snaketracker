@@ -16,17 +16,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -38,10 +34,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,19 +61,18 @@ import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
+import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedState
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
-private val tabTitles = listOf("Alimentación", "Peso", "Notas")
+private val tabTitles = listOf("Perfil", "Alimentación", "Peso", "Notas")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PetDetailScreen(
     onBackClick: () -> Unit,
     onPetDeleted: () -> Unit,
+    onEditProfileClick: (Long) -> Unit,
     onAddFeedingClick: (Long) -> Unit,
     onAddWeightClick: (Long) -> Unit,
     viewModel: PetDetailViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
@@ -99,7 +92,6 @@ fun PetDetailScreen(
     val currentWeight by viewModel.currentWeight.collectAsStateWithLifecycle()
 
     var selectedTab by rememberSaveable { mutableStateOf(0) }
-    var showEditDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -111,7 +103,7 @@ fun PetDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showEditDialog = true }, enabled = pet != null) {
+                    IconButton(onClick = { onEditProfileClick(viewModel.petId) }, enabled = pet != null) {
                         Icon(Icons.Default.Edit, contentDescription = "Editar perfil")
                     }
                     IconButton(onClick = { viewModel.deletePet(onPetDeleted) }) {
@@ -126,14 +118,14 @@ fun PetDetailScreen(
         },
         floatingActionButton = {
             when (selectedTab) {
-                0 -> FloatingActionButton(
+                1 -> FloatingActionButton(
                     onClick = { onAddFeedingClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar alimentación")
                 }
-                1 -> FloatingActionButton(
+                2 -> FloatingActionButton(
                     onClick = { onAddWeightClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -166,9 +158,10 @@ fun PetDetailScreen(
                 }
 
                 when (selectedTab) {
-                    0 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
-                    1 -> WeightTab(weightLogs = weightLogs, modifier = Modifier.weight(1f))
-                    2 -> NotesTab(
+                    0 -> ProfileTab(pet = currentPet, modifier = Modifier.weight(1f))
+                    1 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
+                    2 -> WeightTab(weightLogs = weightLogs, modifier = Modifier.weight(1f))
+                    3 -> NotesTab(
                         notes = currentPet.notes,
                         onSave = viewModel::updateNotes,
                         modifier = Modifier.weight(1f)
@@ -176,18 +169,6 @@ fun PetDetailScreen(
                 }
             }
         }
-    }
-
-    val petForEdit = pet
-    if (showEditDialog && petForEdit != null) {
-        EditPetDialog(
-            pet = petForEdit,
-            onDismiss = { showEditDialog = false },
-            onConfirm = { name, species, birthDate ->
-                viewModel.updateProfile(name = name, species = species, birthDate = birthDate)
-                showEditDialog = false
-            }
-        )
     }
 }
 
@@ -397,87 +378,49 @@ private fun EmptyTabState(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditPetDialog(
-    pet: Pet,
-    onDismiss: () -> Unit,
-    onConfirm: (name: String, species: String, birthDate: Long) -> Unit
-) {
-    var name by rememberSaveable(pet.id) { mutableStateOf(pet.name) }
-    var species by rememberSaveable(pet.id) { mutableStateOf(pet.species) }
-    var birthDateMillis by rememberSaveable(pet.id) { mutableStateOf(pet.birthDate) }
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Editar perfil") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = species,
-                    onValueChange = { species = it },
-                    label = { Text("Especie") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                )
-                OutlinedTextField(
-                    value = formatDate(birthDateMillis),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Fecha de nacimiento") },
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(Icons.Default.CalendarToday, contentDescription = "Elegir fecha")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(name, species, birthDateMillis) },
-                enabled = name.isNotBlank() && species.isNotBlank()
-            ) {
-                Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+private fun ProfileTab(pet: Pet, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        ProfileField(label = "Especie", value = pet.species)
+        ProfileField(label = "Sexo", value = pet.sex)
+        if (pet.morph.isNotBlank()) {
+            ProfileField(label = "Morfo", value = pet.morph)
         }
-    )
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = birthDateMillis)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { birthDateMillis = it }
-                    showDatePicker = false
-                }) {
-                    Text("Aceptar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancelar")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
+        ProfileField(
+            label = "Fecha de nacimiento",
+            value = "${formatDate(pet.birthDate)} (${calculateAge(pet.birthDate)})"
+        )
+        pet.acquisitionDate?.let { acquisitionDate ->
+            ProfileField(label = "Fecha de adquisición", value = formatDate(acquisitionDate))
+        }
+        if (!pet.breeder.isNullOrBlank()) {
+            ProfileField(label = "Criador o tienda", value = pet.breeder)
+        }
+        if (!pet.chipNumber.isNullOrBlank()) {
+            ProfileField(label = "Número de chip", value = pet.chipNumber)
         }
     }
+}
+
+@Composable
+private fun ProfileField(label: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 }
 
 private fun calculateAge(birthDateMillis: Long): String {
@@ -503,9 +446,6 @@ private fun calculateAge(birthDateMillis: Long): String {
         else -> "$years ${if (years == 1) "año" else "años"}, $months ${if (months == 1) "mes" else "meses"}"
     }
 }
-
-private fun formatDate(millis: Long): String =
-    SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES")).format(Date(millis))
 
 private fun formatWeight(weight: Double): String =
     if (weight == weight.toLong().toDouble()) weight.toLong().toString() else weight.toString()

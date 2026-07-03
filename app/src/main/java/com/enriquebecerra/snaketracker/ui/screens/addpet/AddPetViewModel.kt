@@ -13,9 +13,14 @@ class AddPetViewModel(
     fun savePet(
         name: String,
         species: String,
+        sex: String,
+        morph: String,
         birthDate: Long,
+        acquisitionDate: Long?,
         weight: Double,
         photoUri: String?,
+        breeder: String?,
+        chipNumber: String?,
         notes: String?,
         onSaved: () -> Unit
     ) {
@@ -24,9 +29,14 @@ class AddPetViewModel(
                 Pet(
                     name = name,
                     species = species,
+                    sex = sex,
+                    morph = morph,
                     birthDate = birthDate,
+                    acquisitionDate = acquisitionDate,
                     weight = weight,
                     photoUri = photoUri,
+                    breeder = breeder,
+                    chipNumber = chipNumber,
                     notes = notes
                 )
             )

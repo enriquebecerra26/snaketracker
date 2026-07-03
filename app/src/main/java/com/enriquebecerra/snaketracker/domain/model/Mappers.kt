@@ -8,9 +8,14 @@ fun PetEntity.toDomain() = Pet(
     id = id,
     name = name,
     species = species,
+    sex = sex,
+    morph = morph,
     birthDate = birthDate,
+    acquisitionDate = acquisitionDate,
     weight = weight,
     photoUri = photoUri,
+    breeder = breeder,
+    chipNumber = chipNumber,
     notes = notes
 )
 
@@ -18,9 +23,14 @@ fun Pet.toEntity() = PetEntity(
     id = id,
     name = name,
     species = species,
+    sex = sex,
+    morph = morph,
     birthDate = birthDate,
+    acquisitionDate = acquisitionDate,
     weight = weight,
     photoUri = photoUri,
+    breeder = breeder,
+    chipNumber = chipNumber,
     notes = notes
 )
 

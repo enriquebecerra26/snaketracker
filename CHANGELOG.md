@@ -2,6 +2,29 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 4 - Perfil completo de serpiente con foto
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- Ampliación de la entidad `Pet` (Room) con los campos `sex`, `morph`, `acquisitionDate`, `breeder` y `chipNumber`. Se agregó `MIGRATION_1_2` (`SnakeTrackerDatabase`, versión 2) con `ALTER TABLE` y valores por defecto para no perder los datos existentes; `photoUri` ahora se usa con fotos reales en lugar de `null`.
+- `AddPetScreen` ampliado con todos los campos nuevos: morfo (opcional), selector de sexo (Macho/Hembra/Desconocido) con `SegmentedButton` de Material 3, fecha de adquisición opcional, criador/tienda y número de chip.
+- Nueva pantalla dedicada `EditPetScreen` (con su propio `EditPetViewModel` y ruta de navegación `edit_pet/{petId}`) que reemplaza el diálogo de edición de la Etapa 3: permite editar el perfil completo de la mascota (incluyendo foto, peso y notas) precargando los valores actuales desde Room.
+- Selector de foto reutilizable (`PetPhotoPicker`, en `ui/common`) con preview circular y menú "Cámara" / "Galería":
+  - Cámara: `ActivityResultContracts.TakePicture()` con un `Uri` de destino generado vía `FileProvider`.
+  - Galería: `ActivityResultContracts.GetContent()`.
+  - Ambos flujos piden el permiso correspondiente en tiempo de ejecución (`CAMERA`, y `READ_MEDIA_IMAGES`/`READ_EXTERNAL_STORAGE` según la versión de Android) antes de abrir la cámara o el selector.
+  - Las fotos elegidas se copian siempre a almacenamiento interno de la app (`PhotoStorage`, en `data/local/util`) para que el URI persista entre reinicios sin depender de permisos sobre `content://` externos.
+- `PetDetailScreen` ahora tiene 4 tabs: "Perfil" (especie, sexo, morfo, fecha de nacimiento con edad calculada, fecha de adquisición, criador y número de chip), "Alimentación", "Peso" y "Notas". El encabezado sigue mostrando la foto real con Coil (o el ícono de serpiente como placeholder). El botón de editar del `TopAppBar` ahora navega a `EditPetScreen` en lugar de abrir un diálogo.
+- Permisos nuevos en `AndroidManifest.xml`: `CAMERA`, y `<provider>` de `FileProvider` (`res/xml/file_paths.xml`) para compartir el archivo de la foto de cámara con la app de cámara del sistema. Los permisos de galería (`READ_MEDIA_IMAGES` / `READ_EXTERNAL_STORAGE`) ya existían desde etapas previas.
+- Componentes compartidos nuevos en `ui/common`: `DateField` (campo de fecha con `DatePicker` de Material 3, reutilizado en Add/Edit) y `SexSelector`; se extrajo `formatDate` a `ui/common/DateFormat.kt` para eliminar la duplicación entre pantallas.
+
+### Notas técnicas
+
+- Se descartó dejar el `photoUri` como `content://` crudo del selector de galería porque esos permisos pueden expirar entre reinicios de la app; en su lugar siempre se copian los bytes a `filesDir/photos/` y se referencia el archivo con un URI `file://`.
+- `EditPetViewModel.savePet` recibe directamente el `Pet` actualizado (construido en la UI con `pet.copy(...)`) en lugar de una lista de parámetros individuales, evitando reconstruir el objeto dos veces.
+
 ## Etapa 3 - Pantalla de detalle de mascota
 
 **Fecha:** 2026-07-02

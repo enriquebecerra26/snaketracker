@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
+import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.feeding.AddFeedingScreen
 import com.enriquebecerra.snaketracker.ui.screens.petdetail.PetDetailScreen
 import com.enriquebecerra.snaketracker.ui.screens.petlist.PetListScreen
@@ -40,12 +41,25 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
             PetDetailScreen(
                 onBackClick = { navController.popBackStack() },
                 onPetDeleted = { navController.popBackStack(Screen.PetList.route, inclusive = false) },
+                onEditProfileClick = { petId ->
+                    navController.navigate(Screen.EditPet.createRoute(petId))
+                },
                 onAddFeedingClick = { petId ->
                     navController.navigate(Screen.AddFeeding.createRoute(petId))
                 },
                 onAddWeightClick = { petId ->
                     navController.navigate(Screen.AddWeight.createRoute(petId))
                 }
+            )
+        }
+
+        composable(
+            route = Screen.EditPet.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            EditPetScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
