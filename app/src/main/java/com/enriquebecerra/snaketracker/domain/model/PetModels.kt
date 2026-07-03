@@ -31,7 +31,16 @@ data class WeightLog(
     val id: Long = 0,
     val petId: Long,
     val date: Long,
-    val weight: Double
+    val weight: Double,
+    val notes: String? = null
+)
+
+data class LengthLog(
+    val id: Long = 0,
+    val petId: Long,
+    val date: Long,
+    val lengthCm: Float,
+    val notes: String? = null
 )
 
 data class PetListItem(

@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.feeding.AddFeedingScreen
+import com.enriquebecerra.snaketracker.ui.screens.length.AddLengthScreen
 import com.enriquebecerra.snaketracker.ui.screens.petdetail.PetDetailScreen
 import com.enriquebecerra.snaketracker.ui.screens.petlist.PetListScreen
 import com.enriquebecerra.snaketracker.ui.screens.weight.AddWeightScreen
@@ -49,6 +50,9 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 },
                 onAddWeightClick = { petId ->
                     navController.navigate(Screen.AddWeight.createRoute(petId))
+                },
+                onAddLengthClick = { petId ->
+                    navController.navigate(Screen.AddLength.createRoute(petId))
                 }
             )
         }
@@ -78,6 +82,16 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
             arguments = listOf(navArgument("petId") { type = NavType.LongType })
         ) {
             AddWeightScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddLength.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddLengthScreen(
                 onSaved = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )

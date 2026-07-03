@@ -1,6 +1,7 @@
 package com.enriquebecerra.snaketracker.domain.model
 
 import com.enriquebecerra.snaketracker.data.local.entity.FeedingLog as FeedingLogEntity
+import com.enriquebecerra.snaketracker.data.local.entity.LengthLog as LengthLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.Pet as PetEntity
 import com.enriquebecerra.snaketracker.data.local.entity.WeightLog as WeightLogEntity
 
@@ -58,12 +59,30 @@ fun WeightLogEntity.toDomain() = WeightLog(
     id = id,
     petId = petId,
     date = date,
-    weight = weight
+    weight = weight,
+    notes = notes
 )
 
 fun WeightLog.toEntity() = WeightLogEntity(
     id = id,
     petId = petId,
     date = date,
-    weight = weight
+    weight = weight,
+    notes = notes
+)
+
+fun LengthLogEntity.toDomain() = LengthLog(
+    id = id,
+    petId = petId,
+    date = date,
+    lengthCm = lengthCm,
+    notes = notes
+)
+
+fun LengthLog.toEntity() = LengthLogEntity(
+    id = id,
+    petId = petId,
+    date = date,
+    lengthCm = lengthCm,
+    notes = notes
 )

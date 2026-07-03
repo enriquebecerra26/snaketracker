@@ -54,18 +54,22 @@ import coil.compose.AsyncImage
 import com.enriquebecerra.snaketracker.R
 import com.enriquebecerra.snaketracker.SnakeTrackerApplication
 import com.enriquebecerra.snaketracker.domain.model.FeedingLog
+import com.enriquebecerra.snaketracker.domain.model.LengthLog
 import com.enriquebecerra.snaketracker.domain.model.Pet
 import com.enriquebecerra.snaketracker.domain.model.WeightLog
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetLengthLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
+import com.enriquebecerra.snaketracker.ui.common.ChartPoint
+import com.enriquebecerra.snaketracker.ui.common.LineChartWithAxis
 import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedState
 import java.util.Calendar
 
-private val tabTitles = listOf("Perfil", "Alimentación", "Peso", "Notas")
+private val tabTitles = listOf("Perfil", "Alimentación", "Peso", "Longitud", "Notas")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,12 +79,14 @@ fun PetDetailScreen(
     onEditProfileClick: (Long) -> Unit,
     onAddFeedingClick: (Long) -> Unit,
     onAddWeightClick: (Long) -> Unit,
+    onAddLengthClick: (Long) -> Unit,
     viewModel: PetDetailViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
         PetDetailViewModel(
             savedStateHandle = handle,
             getPetByIdUseCase = GetPetByIdUseCase(app.petRepository),
             getFeedingLogsUseCase = GetFeedingLogsUseCase(app.feedingRepository),
             getWeightLogsUseCase = GetWeightLogsUseCase(app.weightRepository),
+            getLengthLogsUseCase = GetLengthLogsUseCase(app.lengthRepository),
             savePetUseCase = SavePetUseCase(app.petRepository),
             deletePetUseCase = DeletePetUseCase(app.petRepository)
         )
@@ -89,7 +95,10 @@ fun PetDetailScreen(
     val pet by viewModel.pet.collectAsStateWithLifecycle()
     val feedingLogs by viewModel.feedingLogs.collectAsStateWithLifecycle()
     val weightLogs by viewModel.weightLogs.collectAsStateWithLifecycle()
+    val lengthLogs by viewModel.lengthLogs.collectAsStateWithLifecycle()
     val currentWeight by viewModel.currentWeight.collectAsStateWithLifecycle()
+    val currentLength by viewModel.currentLength.collectAsStateWithLifecycle()
+    val weightVariation by viewModel.weightVariation.collectAsStateWithLifecycle()
 
     var selectedTab by rememberSaveable { mutableStateOf(0) }
 
@@ -132,6 +141,13 @@ fun PetDetailScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar peso")
                 }
+                3 -> FloatingActionButton(
+                    onClick = { onAddLengthClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar longitud")
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -160,8 +176,17 @@ fun PetDetailScreen(
                 when (selectedTab) {
                     0 -> ProfileTab(pet = currentPet, modifier = Modifier.weight(1f))
                     1 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
-                    2 -> WeightTab(weightLogs = weightLogs, modifier = Modifier.weight(1f))
-                    3 -> NotesTab(
+                    2 -> WeightTab(
+                        weightLogs = weightLogs,
+                        weightVariation = weightVariation,
+                        modifier = Modifier.weight(1f)
+                    )
+                    3 -> LengthTab(
+                        lengthLogs = lengthLogs,
+                        currentLength = currentLength,
+                        modifier = Modifier.weight(1f)
+                    )
+                    4 -> NotesTab(
                         notes = currentPet.notes,
                         onSave = viewModel::updateNotes,
                         modifier = Modifier.weight(1f)
@@ -220,7 +245,7 @@ private fun PetHeader(pet: Pet, currentWeight: Double) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             HeaderStat(label = "Edad", value = calculateAge(pet.birthDate))
-            HeaderStat(label = "Peso actual", value = "${formatWeight(currentWeight)} g")
+            HeaderStat(label = "Peso actual", value = "${formatDecimal(currentWeight)} g")
         }
     }
 }
@@ -283,7 +308,7 @@ private fun FeedingLogCard(log: FeedingLog) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${formatWeight(log.preyWeight)} g",
+                    text = "${formatDecimal(log.preyWeight)} g",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -306,13 +331,24 @@ private fun FeedingLogCard(log: FeedingLog) {
 }
 
 @Composable
-private fun WeightTab(weightLogs: List<WeightLog>, modifier: Modifier = Modifier) {
+private fun WeightTab(
+    weightLogs: List<WeightLog>,
+    weightVariation: String,
+    modifier: Modifier = Modifier
+) {
     if (weightLogs.isEmpty()) {
         EmptyTabState(text = "Sin registros de peso", modifier = modifier)
         return
     }
     Column(modifier = modifier.fillMaxWidth()) {
-        WeightLineChart(weightLogs = weightLogs, modifier = Modifier.padding(top = 8.dp))
+        if (weightVariation.isNotBlank()) {
+            WeightVariationBanner(weightVariation)
+        }
+        LineChartWithAxis(
+            points = weightLogs.map { ChartPoint(it.date, it.weight.toFloat()) },
+            modifier = Modifier.padding(top = 8.dp),
+            emptyMessage = "Registra al menos 2 pesos para ver la gráfica"
+        )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
@@ -327,18 +363,115 @@ private fun WeightTab(weightLogs: List<WeightLog>, modifier: Modifier = Modifier
 }
 
 @Composable
+private fun WeightVariationBanner(weightVariation: String) {
+    val color = when {
+        weightVariation.startsWith("+") -> MaterialTheme.colorScheme.primary
+        weightVariation.startsWith("-") -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Text(
+        text = weightVariation,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = color,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
 private fun WeightLogRow(log: WeightLog) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = formatDate(log.date),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (!log.notes.isNullOrBlank()) {
+                Text(
+                    text = log.notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Text(
-            text = formatDate(log.date),
+            text = "${formatDecimal(log.weight)} g",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+private fun LengthTab(
+    lengthLogs: List<LengthLog>,
+    currentLength: Float?,
+    modifier: Modifier = Modifier
+) {
+    if (lengthLogs.isEmpty()) {
+        EmptyTabState(text = "Sin registros de longitud", modifier = modifier)
+        return
+    }
+    val oldest = remember(lengthLogs) { lengthLogs.minByOrNull { it.date } }
+    val growth = if (currentLength != null && oldest != null) currentLength - oldest.lengthCm else null
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            HeaderStat(label = "Longitud actual", value = "${formatDecimal(currentLength?.toDouble() ?: 0.0)} cm")
+            if (growth != null) {
+                HeaderStat(
+                    label = "Crecimiento total",
+                    value = "${if (growth >= 0) "+" else ""}${formatDecimal(growth.toDouble())} cm"
+                )
+            }
+        }
+        LineChartWithAxis(
+            points = lengthLogs.map { ChartPoint(it.date, it.lengthCm) },
+            emptyMessage = "Registra al menos 2 longitudes para ver la gráfica"
+        )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(lengthLogs, key = { it.id }) { log ->
+                LengthLogRow(log)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LengthLogRow(log: LengthLog) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = formatDate(log.date),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (!log.notes.isNullOrBlank()) {
+                Text(
+                    text = log.notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Text(
-            text = "${formatWeight(log.weight)} g",
+            text = "${formatDecimal(log.lengthCm.toDouble())} cm",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
@@ -447,5 +580,5 @@ private fun calculateAge(birthDateMillis: Long): String {
     }
 }
 
-private fun formatWeight(weight: Double): String =
+private fun formatDecimal(weight: Double): String =
     if (weight == weight.toLong().toDouble()) weight.toLong().toString() else weight.toString()

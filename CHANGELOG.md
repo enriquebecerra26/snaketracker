@@ -2,6 +2,27 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 5 - Biometría completa: peso con variación y longitud
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- `WeightLog` (Room) ampliado con `notes: String?`. Nueva entidad `LengthLog` (id, petId, date, lengthCm, notes) con su `LengthLogDao` (`insert`, `getByPetId`, `deleteById`) y `LengthRepository`. `MIGRATION_2_3` (`SnakeTrackerDatabase`, versión 3) agrega la columna de notas a `weight_logs` y crea la tabla `length_logs` sin perder datos existentes.
+- Nuevos casos de uso `GetLengthLogsUseCase`, `SaveLengthLogUseCase` y `DeleteLengthLogUseCase`, y `lengthRepository` expuesto desde `SnakeTrackerApplication`.
+- `AddWeightScreen`/`AddWeightViewModel` ampliados: fecha con `DatePicker` (por defecto hoy), peso obligatorio con validación y notas opcionales, con botones "Guardar" y "Cancelar".
+- Nueva pantalla `AddLengthScreen` (con `AddLengthViewModel`) para registrar longitud en cm, con los mismos campos y validación que el registro de peso. Ruta de navegación `add_length/{petId}`.
+- `PetDetailScreen`, tab **Peso**: banner de variación respecto al peso de hace 30 días (`weightVariation` en `PetDetailViewModel`), en verde si aumentó y en rojo si disminuyó; gráfica de línea mejorada con puntos marcados y etiquetas de fecha en el eje X; lista de registros con fecha, peso y notas.
+- Nuevo tab **Longitud** en `PetDetailScreen` (entre Peso y Notas): longitud actual y crecimiento total desde el primer registro, gráfica de línea con el historial en cm, y lista de registros con fecha, longitud y notas. Botón flotante "+" hacia `AddLengthScreen`.
+- Componente de gráfica compartido `LineChartWithAxis` (`ui/common`, con Canvas nativo de Compose) que reemplaza el `WeightLineChart` específico de la Etapa 3, reutilizado ahora por los tabs de Peso y Longitud.
+- `PetDetailViewModel` ampliado con `lengthLogs`, `currentLength` y `weightVariation` como `StateFlow`.
+
+### Notas técnicas
+
+- `weightVariation` se expone como `StateFlow<String>` (tal como se pidió); el signo (`+`/`-`) del texto es lo que determina el color en la UI, evitando exponer un tipo adicional solo para el color.
+- Si no hay un registro de hace 30 días o más, `computeWeightVariation` usa el registro más antiguo disponible como referencia; con menos de 2 registros de peso no se muestra el banner.
+- Se renombró la función privada `formatWeight` de `PetDetailScreen` a `formatDecimal`, ya que ahora también formatea valores de longitud (cm), no solo peso.
+
 ## Etapa 4 - Perfil completo de serpiente con foto
 
 **Fecha:** 2026-07-03

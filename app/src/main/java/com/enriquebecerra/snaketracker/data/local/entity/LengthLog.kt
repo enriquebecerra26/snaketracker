@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "weight_logs",
+    tableName = "length_logs",
     foreignKeys = [
         ForeignKey(
             entity = Pet::class,
@@ -17,11 +17,11 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index("petId")]
 )
-data class WeightLog(
+data class LengthLog(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val petId: Long,
     val date: Long,
-    val weight: Double,
+    val lengthCm: Float,
     val notes: String? = null
 )

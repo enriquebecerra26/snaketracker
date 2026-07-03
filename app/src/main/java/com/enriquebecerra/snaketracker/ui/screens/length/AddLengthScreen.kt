@@ -1,4 +1,4 @@
-package com.enriquebecerra.snaketracker.ui.screens.weight
+package com.enriquebecerra.snaketracker.ui.screens.length
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,30 +28,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.enriquebecerra.snaketracker.SnakeTrackerApplication
-import com.enriquebecerra.snaketracker.domain.usecase.SaveWeightLogUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.SaveLengthLogUseCase
 import com.enriquebecerra.snaketracker.ui.common.DateField
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddWeightScreen(
+fun AddLengthScreen(
     onSaved: () -> Unit,
     onBackClick: () -> Unit,
-    viewModel: AddWeightViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
-        AddWeightViewModel(handle, SaveWeightLogUseCase(app.weightRepository))
+    viewModel: AddLengthViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
+        AddLengthViewModel(handle, SaveLengthLogUseCase(app.lengthRepository))
     }
 ) {
     var dateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
-    var weight by remember { mutableStateOf("") }
+    var length by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var attemptedSave by remember { mutableStateOf(false) }
 
-    val weightError = attemptedSave && weight.toDoubleOrNull() == null
+    val lengthError = attemptedSave && length.toFloatOrNull() == null
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Registrar peso") },
+                title = { Text("Registrar longitud") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
@@ -74,15 +74,15 @@ fun AddWeightScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = weight,
+                value = length,
                 onValueChange = { input ->
                     if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*$"))) {
-                        weight = input
+                        length = input
                     }
                 },
-                label = { Text("Peso (g)") },
-                isError = weightError,
-                supportingText = { if (weightError) Text("Ingresa un peso válido") },
+                label = { Text("Longitud (cm)") },
+                isError = lengthError,
+                supportingText = { if (lengthError) Text("Ingresa una longitud válida") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
@@ -104,11 +104,11 @@ fun AddWeightScreen(
                 Button(
                     onClick = {
                         attemptedSave = true
-                        val weightValue = weight.toDoubleOrNull()
-                        if (weightValue != null) {
-                            viewModel.saveWeightLog(
+                        val lengthValue = length.toFloatOrNull()
+                        if (lengthValue != null) {
+                            viewModel.saveLengthLog(
                                 date = dateMillis,
-                                weight = weightValue,
+                                lengthCm = lengthValue,
                                 notes = notes.ifBlank { null },
                                 onSaved = onSaved
                             )

@@ -1,26 +1,26 @@
-package com.enriquebecerra.snaketracker.ui.screens.weight
+package com.enriquebecerra.snaketracker.ui.screens.length
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.enriquebecerra.snaketracker.domain.model.WeightLog
-import com.enriquebecerra.snaketracker.domain.usecase.SaveWeightLogUseCase
+import com.enriquebecerra.snaketracker.domain.model.LengthLog
+import com.enriquebecerra.snaketracker.domain.usecase.SaveLengthLogUseCase
 import kotlinx.coroutines.launch
 
-class AddWeightViewModel(
+class AddLengthViewModel(
     savedStateHandle: SavedStateHandle,
-    private val saveWeightLogUseCase: SaveWeightLogUseCase
+    private val saveLengthLogUseCase: SaveLengthLogUseCase
 ) : ViewModel() {
 
     val petId: Long = checkNotNull(savedStateHandle["petId"])
 
-    fun saveWeightLog(date: Long, weight: Double, notes: String?, onSaved: () -> Unit) {
+    fun saveLengthLog(date: Long, lengthCm: Float, notes: String?, onSaved: () -> Unit) {
         viewModelScope.launch {
-            saveWeightLogUseCase(
-                WeightLog(
+            saveLengthLogUseCase(
+                LengthLog(
                     petId = petId,
                     date = date,
-                    weight = weight,
+                    lengthCm = lengthCm,
                     notes = notes
                 )
             )
