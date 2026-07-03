@@ -10,15 +10,29 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Green80,
-    secondary = GreenGrey80,
-    tertiary = Brown80
+    primary = TerrariumGreenBright,
+    onPrimary = Color(0xFF0A2110),
+    primaryContainer = TerrariumMoss,
+    onPrimaryContainer = Color(0xFFD3EBD8),
+    secondary = TerrariumGreenMuted,
+    onSecondary = Color(0xFF12190F),
+    tertiary = Brown80,
+    onTertiary = Color(0xFF2E1F1B),
+    background = TerrariumBackground,
+    onBackground = TerrariumOnSurface,
+    surface = TerrariumSurface,
+    onSurface = TerrariumOnSurface,
+    surfaceVariant = TerrariumSurfaceVariant,
+    onSurfaceVariant = TerrariumOnSurfaceMuted,
+    outline = TerrariumOutline,
+    error = TerrariumError
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -29,8 +43,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun SnakeTrackerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -9,6 +9,8 @@ class FeedingRepository(private val feedingLogDao: FeedingLogDao) {
     fun getFeedingLogsForPet(petId: Long): Flow<List<FeedingLog>> =
         feedingLogDao.getFeedingLogsForPet(petId)
 
+    fun getAllFeedingLogs(): Flow<List<FeedingLog>> = feedingLogDao.getAllFeedingLogs()
+
     suspend fun insertFeedingLog(feedingLog: FeedingLog): Long =
         feedingLogDao.insertFeedingLog(feedingLog)
 

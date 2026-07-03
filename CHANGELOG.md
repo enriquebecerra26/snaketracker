@@ -2,6 +2,31 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 2 - Pantalla principal y formulario de alta
+
+**Fecha:** 2026-07-02
+
+### Añadido
+
+- Pantalla principal (`PetListScreen`) conectada a Room a través de `PetListViewModel`:
+  - `LazyColumn` con una card por mascota mostrando foto (o ícono de serpiente como placeholder), nombre, especie y días desde la última alimentación.
+  - Cálculo de "días desde la última alimentación" mediante `GetPetListItemsUseCase`, que combina el flujo de mascotas con el de registros de alimentación (`PetRepository` + `FeedingRepository`).
+  - `FloatingActionButton` con ícono "+" para navegar al formulario de alta.
+  - Empty state con ilustración (ícono de serpiente) y el texto "Agrega tu primera mascota" cuando no hay mascotas registradas.
+  - Cada card es navegable a la pantalla de detalle de la mascota.
+- Formulario de nueva mascota (`AddPetScreen`):
+  - Campos: nombre, especie, fecha de nacimiento (con `DatePicker` de Material 3), peso inicial en gramos (con teclado numérico) y notas opcionales.
+  - Validación de campos obligatorios (nombre y especie) con mensajes de error visibles al intentar guardar.
+  - Botón "Guardar" que persiste la mascota en Room mediante `SavePetUseCase` y regresa a la lista.
+  - Botón "Cancelar" que regresa sin guardar cambios.
+- Nuevo modelo de dominio `PetListItem` (mascota + días desde la última alimentación) y consulta `FeedingLogDao.getAllFeedingLogs()` para soportar el cálculo agregado.
+- Tema visual personalizado "terrario": paleta oscura de verdes y grises (`ui/theme/Color.kt`, `ui/theme/Theme.kt`) aplicada por defecto en toda la app, y nuevo ícono vectorial de serpiente (`res/drawable/ic_snake.xml`) usado como placeholder de foto e ilustración del empty state.
+
+### Notas técnicas
+
+- El estado de la lista de mascotas se expone como `StateFlow<List<PetListItem>>` en `PetListViewModel`, obtenido con `stateIn` y `SharingStarted.WhileSubscribed(5000)`.
+- El tema fuerza colores dinámicos desactivados (`dynamicColor = false`) para mantener la identidad visual de terrario/reptil en todos los dispositivos.
+
 ## Etapa 1 - Fundación y estructura
 
 **Fecha:** 2026-07-02

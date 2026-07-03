@@ -26,3 +26,8 @@ data class WeightLog(
     val date: Long,
     val weight: Double
 )
+
+data class PetListItem(
+    val pet: Pet,
+    val daysSinceLastFeeding: Int?
+)

@@ -15,6 +15,9 @@ interface FeedingLogDao {
     @Query("SELECT * FROM feeding_logs WHERE petId = :petId ORDER BY date DESC")
     fun getFeedingLogsForPet(petId: Long): Flow<List<FeedingLog>>
 
+    @Query("SELECT * FROM feeding_logs ORDER BY date DESC")
+    fun getAllFeedingLogs(): Flow<List<FeedingLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFeedingLog(feedingLog: FeedingLog): Long
 
