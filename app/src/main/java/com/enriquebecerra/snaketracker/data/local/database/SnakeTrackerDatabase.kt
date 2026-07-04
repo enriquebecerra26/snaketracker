@@ -6,21 +6,25 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.enriquebecerra.snaketracker.data.local.dao.BreedingRecordDao
 import com.enriquebecerra.snaketracker.data.local.dao.DefecationLogDao
 import com.enriquebecerra.snaketracker.data.local.dao.ExpenseRecordDao
 import com.enriquebecerra.snaketracker.data.local.dao.FeedingLogDao
 import com.enriquebecerra.snaketracker.data.local.dao.HealthRecordDao
 import com.enriquebecerra.snaketracker.data.local.dao.LengthLogDao
 import com.enriquebecerra.snaketracker.data.local.dao.PetDao
+import com.enriquebecerra.snaketracker.data.local.dao.PhotoEntryDao
 import com.enriquebecerra.snaketracker.data.local.dao.SheddingLogDao
 import com.enriquebecerra.snaketracker.data.local.dao.TerrariumLogDao
 import com.enriquebecerra.snaketracker.data.local.dao.WeightLogDao
+import com.enriquebecerra.snaketracker.data.local.entity.BreedingRecord
 import com.enriquebecerra.snaketracker.data.local.entity.DefecationLog
 import com.enriquebecerra.snaketracker.data.local.entity.ExpenseRecord
 import com.enriquebecerra.snaketracker.data.local.entity.FeedingLog
 import com.enriquebecerra.snaketracker.data.local.entity.HealthRecord
 import com.enriquebecerra.snaketracker.data.local.entity.LengthLog
 import com.enriquebecerra.snaketracker.data.local.entity.Pet
+import com.enriquebecerra.snaketracker.data.local.entity.PhotoEntry
 import com.enriquebecerra.snaketracker.data.local.entity.SheddingLog
 import com.enriquebecerra.snaketracker.data.local.entity.TerrariumLog
 import com.enriquebecerra.snaketracker.data.local.entity.WeightLog
@@ -35,9 +39,11 @@ import com.enriquebecerra.snaketracker.data.local.entity.WeightLog
         DefecationLog::class,
         HealthRecord::class,
         TerrariumLog::class,
-        ExpenseRecord::class
+        ExpenseRecord::class,
+        PhotoEntry::class,
+        BreedingRecord::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class SnakeTrackerDatabase : RoomDatabase() {
@@ -51,6 +57,8 @@ abstract class SnakeTrackerDatabase : RoomDatabase() {
     abstract fun healthRecordDao(): HealthRecordDao
     abstract fun terrariumLogDao(): TerrariumLogDao
     abstract fun expenseRecordDao(): ExpenseRecordDao
+    abstract fun photoEntryDao(): PhotoEntryDao
+    abstract fun breedingRecordDao(): BreedingRecordDao
 
     companion object {
         private const val DATABASE_NAME = "snaketracker.db"
@@ -215,6 +223,51 @@ abstract class SnakeTrackerDatabase : RoomDatabase() {
             }
         }
 
+        // Etapa 9: galería de fotos y registros de reproducción.
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS photo_entries (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        petId INTEGER NOT NULL,
+                        date INTEGER NOT NULL,
+                        photoUri TEXT NOT NULL,
+                        caption TEXT,
+                        eventType TEXT,
+                        FOREIGN KEY(petId) REFERENCES pets(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_photo_entries_petId ON photo_entries(petId)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS breeding_records (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        petId INTEGER NOT NULL,
+                        maleId INTEGER,
+                        pairingDate INTEGER,
+                        ovulationDate INTEGER,
+                        layingDate INTEGER,
+                        totalEggs INTEGER,
+                        fertileEggs INTEGER,
+                        incubationStartDate INTEGER,
+                        hatchDate INTEGER,
+                        hatchlings INTEGER,
+                        incubationTempC REAL,
+                        incubationHumidity INTEGER,
+                        notes TEXT,
+                        FOREIGN KEY(petId) REFERENCES pets(id) ON DELETE CASCADE,
+                        FOREIGN KEY(maleId) REFERENCES pets(id) ON DELETE SET NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_breeding_records_petId ON breeding_records(petId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_breeding_records_maleId ON breeding_records(maleId)")
+            }
+        }
+
         @Volatile
         private var INSTANCE: SnakeTrackerDatabase? = null
 
@@ -225,7 +278,13 @@ abstract class SnakeTrackerDatabase : RoomDatabase() {
                     SnakeTrackerDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5,
+                        MIGRATION_5_6
+                    )
                     .build().also { INSTANCE = it }
             }
         }

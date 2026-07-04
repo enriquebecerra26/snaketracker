@@ -1,5 +1,8 @@
 package com.enriquebecerra.snaketracker.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
+import com.enriquebecerra.snaketracker.ui.screens.breeding.AddBreedingScreen
 import com.enriquebecerra.snaketracker.ui.screens.calendar.CalendarioScreen
 import com.enriquebecerra.snaketracker.ui.screens.defecation.AddDefecationScreen
 import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
@@ -18,13 +22,34 @@ import com.enriquebecerra.snaketracker.ui.screens.health.AddHealthRecordScreen
 import com.enriquebecerra.snaketracker.ui.screens.length.AddLengthScreen
 import com.enriquebecerra.snaketracker.ui.screens.petdetail.PetDetailScreen
 import com.enriquebecerra.snaketracker.ui.screens.petlist.PetListScreen
+import com.enriquebecerra.snaketracker.ui.screens.photo.AddPhotoScreen
 import com.enriquebecerra.snaketracker.ui.screens.shedding.AddSheddingScreen
+import com.enriquebecerra.snaketracker.ui.screens.splash.SplashScreen
 import com.enriquebecerra.snaketracker.ui.screens.terrarium.AddTerrariumLogScreen
 import com.enriquebecerra.snaketracker.ui.screens.weight.AddWeightScreen
 
+private const val TransitionDurationMs = 220
+
 @Composable
 fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController()) {
-    NavHost(navController = navController, startDestination = Screen.PetList.route) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Splash.route,
+        enterTransition = { fadeIn(animationSpec = tween(TransitionDurationMs)) },
+        exitTransition = { fadeOut(animationSpec = tween(TransitionDurationMs)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(TransitionDurationMs)) },
+        popExitTransition = { fadeOut(animationSpec = tween(TransitionDurationMs)) }
+    ) {
+
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onFinished = {
+                    navController.navigate(Screen.PetList.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
 
         composable(Screen.PetList.route) {
             PetListScreen(
@@ -74,6 +99,12 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 },
                 onAddTerrariumClick = { petId ->
                     navController.navigate(Screen.AddTerrarium.createRoute(petId))
+                },
+                onAddPhotoClick = { petId ->
+                    navController.navigate(Screen.AddPhoto.createRoute(petId))
+                },
+                onAddBreedingClick = { petId ->
+                    navController.navigate(Screen.AddBreeding.createRoute(petId))
                 }
             )
         }
@@ -174,6 +205,26 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
 
         composable(Screen.Calendar.route) {
             CalendarioScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.AddPhoto.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddPhotoScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.AddBreeding.route,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) {
+            AddBreedingScreen(
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

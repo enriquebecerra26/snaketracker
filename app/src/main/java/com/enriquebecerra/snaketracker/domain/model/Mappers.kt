@@ -1,11 +1,13 @@
 package com.enriquebecerra.snaketracker.domain.model
 
+import com.enriquebecerra.snaketracker.data.local.entity.BreedingRecord as BreedingRecordEntity
 import com.enriquebecerra.snaketracker.data.local.entity.DefecationLog as DefecationLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.ExpenseRecord as ExpenseRecordEntity
 import com.enriquebecerra.snaketracker.data.local.entity.FeedingLog as FeedingLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.HealthRecord as HealthRecordEntity
 import com.enriquebecerra.snaketracker.data.local.entity.LengthLog as LengthLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.Pet as PetEntity
+import com.enriquebecerra.snaketracker.data.local.entity.PhotoEntry as PhotoEntryEntity
 import com.enriquebecerra.snaketracker.data.local.entity.SheddingLog as SheddingLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.TerrariumLog as TerrariumLogEntity
 import com.enriquebecerra.snaketracker.data.local.entity.WeightLog as WeightLogEntity
@@ -211,5 +213,57 @@ fun ExpenseRecord.toEntity() = ExpenseRecordEntity(
     category = category,
     description = description,
     amountMXN = amountMXN,
+    notes = notes
+)
+
+fun PhotoEntryEntity.toDomain() = PhotoEntry(
+    id = id,
+    petId = petId,
+    date = date,
+    photoUri = photoUri,
+    caption = caption,
+    eventType = eventType
+)
+
+fun PhotoEntry.toEntity() = PhotoEntryEntity(
+    id = id,
+    petId = petId,
+    date = date,
+    photoUri = photoUri,
+    caption = caption,
+    eventType = eventType
+)
+
+fun BreedingRecordEntity.toDomain() = BreedingRecord(
+    id = id,
+    petId = petId,
+    maleId = maleId,
+    pairingDate = pairingDate,
+    ovulationDate = ovulationDate,
+    layingDate = layingDate,
+    totalEggs = totalEggs,
+    fertileEggs = fertileEggs,
+    incubationStartDate = incubationStartDate,
+    hatchDate = hatchDate,
+    hatchlings = hatchlings,
+    incubationTempC = incubationTempC,
+    incubationHumidity = incubationHumidity,
+    notes = notes
+)
+
+fun BreedingRecord.toEntity() = BreedingRecordEntity(
+    id = id,
+    petId = petId,
+    maleId = maleId,
+    pairingDate = pairingDate,
+    ovulationDate = ovulationDate,
+    layingDate = layingDate,
+    totalEggs = totalEggs,
+    fertileEggs = fertileEggs,
+    incubationStartDate = incubationStartDate,
+    hatchDate = hatchDate,
+    hatchlings = hatchlings,
+    incubationTempC = incubationTempC,
+    incubationHumidity = incubationHumidity,
     notes = notes
 )

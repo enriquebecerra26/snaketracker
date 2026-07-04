@@ -16,8 +16,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -60,35 +60,61 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.enriquebecerra.snaketracker.R
 import com.enriquebecerra.snaketracker.SnakeTrackerApplication
+import com.enriquebecerra.snaketracker.domain.model.BreedingRecord
 import com.enriquebecerra.snaketracker.domain.model.DefecationLog
 import com.enriquebecerra.snaketracker.domain.model.FeedingLog
 import com.enriquebecerra.snaketracker.domain.model.HealthRecord
 import com.enriquebecerra.snaketracker.domain.model.LengthLog
 import com.enriquebecerra.snaketracker.domain.model.Pet
+import com.enriquebecerra.snaketracker.domain.model.PhotoEntry
 import com.enriquebecerra.snaketracker.domain.model.SheddingLog
 import com.enriquebecerra.snaketracker.domain.model.TerrariumLog
 import com.enriquebecerra.snaketracker.domain.model.WeightLog
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetBreedingRecordsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetDefecationLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetFeedingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetHealthRecordsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetLengthLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetByIdUseCase
+import com.enriquebecerra.snaketracker.domain.usecase.GetPhotosUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetSheddingLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetTerrariumLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetWeightLogsUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.SavePetUseCase
 import com.enriquebecerra.snaketracker.ui.common.ChartPoint
 import com.enriquebecerra.snaketracker.ui.common.LineChartWithAxis
+import com.enriquebecerra.snaketracker.ui.common.PullToRefreshWrapper
 import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.formatDateTime
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModelWithSavedState
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-private val tabTitles = listOf(
-    "Perfil", "Alimentación", "Mudas", "Defecaciones", "Salud", "Terrario", "Peso", "Longitud", "Notas"
-)
+private enum class PetDetailTabType {
+    PERFIL, ALIMENTACION, MUDAS, DEFECACIONES, SALUD, TERRARIO, PESO, LONGITUD, REPRODUCCION, GALERIA, NOTAS
+}
+
+private data class PetDetailTab(val type: PetDetailTabType, val title: String)
+
+private fun buildTabs(pet: Pet): List<PetDetailTab> {
+    val tabs = mutableListOf(
+        PetDetailTab(PetDetailTabType.PERFIL, "Perfil"),
+        PetDetailTab(PetDetailTabType.ALIMENTACION, "Alimentación"),
+        PetDetailTab(PetDetailTabType.MUDAS, "Mudas"),
+        PetDetailTab(PetDetailTabType.DEFECACIONES, "Defecaciones"),
+        PetDetailTab(PetDetailTabType.SALUD, "Salud"),
+        PetDetailTab(PetDetailTabType.TERRARIO, "Terrario"),
+        PetDetailTab(PetDetailTabType.PESO, "Peso"),
+        PetDetailTab(PetDetailTabType.LONGITUD, "Longitud")
+    )
+    if (pet.sex == "Hembra" || pet.sex == "Desconocido") {
+        tabs += PetDetailTab(PetDetailTabType.REPRODUCCION, "Reproducción")
+    }
+    tabs += PetDetailTab(PetDetailTabType.GALERIA, "Galería")
+    tabs += PetDetailTab(PetDetailTabType.NOTAS, "Notas")
+    return tabs
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +129,8 @@ fun PetDetailScreen(
     onAddDefecationClick: (Long) -> Unit,
     onAddHealthClick: (Long) -> Unit,
     onAddTerrariumClick: (Long) -> Unit,
+    onAddPhotoClick: (Long) -> Unit,
+    onAddBreedingClick: (Long) -> Unit,
     viewModel: PetDetailViewModel = snakeTrackerViewModelWithSavedState { app: SnakeTrackerApplication, handle ->
         PetDetailViewModel(
             savedStateHandle = handle,
@@ -114,6 +142,8 @@ fun PetDetailScreen(
             getDefecationLogsUseCase = GetDefecationLogsUseCase(app.defecationRepository),
             getHealthRecordsUseCase = GetHealthRecordsUseCase(app.healthRepository),
             getTerrariumLogsUseCase = GetTerrariumLogsUseCase(app.terrariumRepository),
+            getPhotosUseCase = GetPhotosUseCase(app.photoRepository),
+            getBreedingRecordsUseCase = GetBreedingRecordsUseCase(app.breedingRepository),
             savePetUseCase = SavePetUseCase(app.petRepository),
             deletePetUseCase = DeletePetUseCase(app.petRepository)
         )
@@ -127,11 +157,15 @@ fun PetDetailScreen(
     val defecationLogs by viewModel.defecationLogs.collectAsStateWithLifecycle()
     val healthRecords by viewModel.healthRecords.collectAsStateWithLifecycle()
     val terrariumLogs by viewModel.terrariumLogs.collectAsStateWithLifecycle()
+    val photos by viewModel.photos.collectAsStateWithLifecycle()
+    val breedingRecords by viewModel.breedingRecords.collectAsStateWithLifecycle()
     val currentWeight by viewModel.currentWeight.collectAsStateWithLifecycle()
     val currentLength by viewModel.currentLength.collectAsStateWithLifecycle()
     val weightVariation by viewModel.weightVariation.collectAsStateWithLifecycle()
 
     var selectedTab by rememberSaveable { mutableStateOf(0) }
+    val tabs = remember(pet?.sex) { pet?.let(::buildTabs) ?: emptyList() }
+    val currentTabType = tabs.getOrNull(selectedTab)?.type
 
     Scaffold(
         topBar = {
@@ -139,7 +173,7 @@ fun PetDetailScreen(
                 title = { Text(pet?.name ?: "Detalle") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 actions = {
@@ -157,104 +191,130 @@ fun PetDetailScreen(
             )
         },
         floatingActionButton = {
-            when (selectedTab) {
-                1 -> FloatingActionButton(
+            when (currentTabType) {
+                PetDetailTabType.ALIMENTACION -> FloatingActionButton(
                     onClick = { onAddFeedingClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar alimentación")
                 }
-                2 -> FloatingActionButton(
+                PetDetailTabType.MUDAS -> FloatingActionButton(
                     onClick = { onAddSheddingClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar muda")
                 }
-                3 -> FloatingActionButton(
+                PetDetailTabType.DEFECACIONES -> FloatingActionButton(
                     onClick = { onAddDefecationClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar defecación")
                 }
-                4 -> FloatingActionButton(
+                PetDetailTabType.SALUD -> FloatingActionButton(
                     onClick = { onAddHealthClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar salud")
                 }
-                5 -> FloatingActionButton(
+                PetDetailTabType.TERRARIO -> FloatingActionButton(
                     onClick = { onAddTerrariumClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar terrario")
                 }
-                6 -> FloatingActionButton(
+                PetDetailTabType.PESO -> FloatingActionButton(
                     onClick = { onAddWeightClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar peso")
                 }
-                7 -> FloatingActionButton(
+                PetDetailTabType.LONGITUD -> FloatingActionButton(
                     onClick = { onAddLengthClick(viewModel.petId) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar longitud")
                 }
+                PetDetailTabType.REPRODUCCION -> FloatingActionButton(
+                    onClick = { onAddBreedingClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar reproducción")
+                }
+                PetDetailTabType.GALERIA -> FloatingActionButton(
+                    onClick = { onAddPhotoClick(viewModel.petId) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar foto")
+                }
+                PetDetailTabType.PERFIL, PetDetailTabType.NOTAS, null -> Unit
             }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         val currentPet = pet
-        if (currentPet == null) {
+        if (currentPet == null || tabs.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding))
         } else {
+            val safeSelectedTab = selectedTab.coerceIn(0, tabs.lastIndex)
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                 PetHeader(pet = currentPet, currentWeight = currentWeight, feedingLogs = feedingLogs)
 
                 ScrollableTabRow(
-                    selectedTabIndex = selectedTab,
+                    selectedTabIndex = safeSelectedTab,
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary,
                     edgePadding = 12.dp
                 ) {
-                    tabTitles.forEachIndexed { index, title ->
+                    tabs.forEachIndexed { index, tab ->
                         Tab(
-                            selected = selectedTab == index,
+                            selected = safeSelectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(title) }
+                            text = { Text(tab.title) }
                         )
                     }
                 }
 
-                when (selectedTab) {
-                    0 -> ProfileTab(pet = currentPet, modifier = Modifier.weight(1f))
-                    1 -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
-                    2 -> SheddingTab(sheddingLogs = sheddingLogs, modifier = Modifier.weight(1f))
-                    3 -> DefecationTab(defecationLogs = defecationLogs, modifier = Modifier.weight(1f))
-                    4 -> HealthTab(healthRecords = healthRecords, modifier = Modifier.weight(1f))
-                    5 -> TerrariumTab(terrariumLogs = terrariumLogs, modifier = Modifier.weight(1f))
-                    6 -> WeightTab(
-                        weightLogs = weightLogs,
-                        weightVariation = weightVariation,
-                        modifier = Modifier.weight(1f)
-                    )
-                    7 -> LengthTab(
-                        lengthLogs = lengthLogs,
-                        currentLength = currentLength,
-                        modifier = Modifier.weight(1f)
-                    )
-                    8 -> NotesTab(
-                        notes = currentPet.notes,
-                        onSave = viewModel::updateNotes,
-                        modifier = Modifier.weight(1f)
-                    )
+                PullToRefreshWrapper(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        when (currentTabType) {
+                            PetDetailTabType.PERFIL -> ProfileTab(pet = currentPet, modifier = Modifier.weight(1f))
+                            PetDetailTabType.ALIMENTACION -> FeedingTab(feedingLogs = feedingLogs, modifier = Modifier.weight(1f))
+                            PetDetailTabType.MUDAS -> SheddingTab(sheddingLogs = sheddingLogs, modifier = Modifier.weight(1f))
+                            PetDetailTabType.DEFECACIONES -> DefecationTab(defecationLogs = defecationLogs, modifier = Modifier.weight(1f))
+                            PetDetailTabType.SALUD -> HealthTab(healthRecords = healthRecords, modifier = Modifier.weight(1f))
+                            PetDetailTabType.TERRARIO -> TerrariumTab(terrariumLogs = terrariumLogs, modifier = Modifier.weight(1f))
+                            PetDetailTabType.PESO -> WeightTab(
+                                weightLogs = weightLogs,
+                                weightVariation = weightVariation,
+                                modifier = Modifier.weight(1f)
+                            )
+                            PetDetailTabType.LONGITUD -> LengthTab(
+                                lengthLogs = lengthLogs,
+                                currentLength = currentLength,
+                                modifier = Modifier.weight(1f)
+                            )
+                            PetDetailTabType.REPRODUCCION -> ReproduccionTab(
+                                records = breedingRecords,
+                                modifier = Modifier.weight(1f)
+                            )
+                            PetDetailTabType.GALERIA -> GaleriaTab(photos = photos, modifier = Modifier.weight(1f))
+                            PetDetailTabType.NOTAS -> NotesTab(
+                                notes = currentPet.notes,
+                                onSave = viewModel::updateNotes,
+                                modifier = Modifier.weight(1f)
+                            )
+                            null -> Unit
+                        }
+                    }
                 }
             }
         }
@@ -1091,7 +1151,7 @@ private fun NotesTab(notes: String?, onSave: (String) -> Unit, modifier: Modifie
 }
 
 @Composable
-private fun EmptyTabState(text: String, modifier: Modifier = Modifier) {
+internal fun EmptyTabState(text: String, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
             text = text,

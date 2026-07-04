@@ -1,6 +1,7 @@
 package com.enriquebecerra.snaketracker.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object PetList : Screen("pet_list")
     object AddPet : Screen("add_pet")
 
@@ -45,4 +46,12 @@ sealed class Screen(val route: String) {
     object AddExpense : Screen("add_expense")
 
     object Calendar : Screen("calendar")
+
+    object AddPhoto : Screen("add_photo/{petId}") {
+        fun createRoute(petId: Long) = "add_photo/$petId"
+    }
+
+    object AddBreeding : Screen("add_breeding/{petId}") {
+        fun createRoute(petId: Long) = "add_breeding/$petId"
+    }
 }

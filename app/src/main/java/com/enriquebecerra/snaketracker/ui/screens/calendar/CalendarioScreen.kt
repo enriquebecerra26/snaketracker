@@ -18,7 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +51,7 @@ import com.enriquebecerra.snaketracker.SnakeTrackerApplication
 import com.enriquebecerra.snaketracker.domain.model.CalendarEvent
 import com.enriquebecerra.snaketracker.domain.model.CalendarEventType
 import com.enriquebecerra.snaketracker.domain.usecase.GetCalendarEventsUseCase
+import com.enriquebecerra.snaketracker.ui.common.PullToRefreshWrapper
 import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModel
 import java.time.Instant
@@ -95,7 +96,7 @@ fun CalendarioScreen(
                 title = { Text("Calendario") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -106,10 +107,10 @@ fun CalendarioScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
+        PullToRefreshWrapper(modifier = Modifier.padding(padding)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -173,6 +174,7 @@ fun CalendarioScreen(
                     upcoming.forEach { event -> EventRow(event) }
                 }
             }
+        }
         }
     }
 }

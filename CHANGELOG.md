@@ -2,6 +2,31 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 9 - Galería, Reproducción y Pulido final
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- Nuevas entidades Room `PhotoEntry` (foto, caption, tipo de evento) y `BreedingRecord` (emparejamiento, ovulación, puesta, incubación, eclosión, crías; `maleId` con `ON DELETE SET NULL`), con sus DAOs, repositorios y `MIGRATION_5_6` (versión 6).
+- Nueva pantalla `AddPhotoScreen` (con `AddPhotoViewModel`, ruta `add_photo/{petId}`): reutiliza `PetPhotoPicker`, fecha, caption opcional y chips de tipo de evento (Muda/Peso/Mensual/Otro).
+- Nueva pantalla `AddBreedingScreen` (con `AddBreedingViewModel`, ruta `add_breeding/{petId}`): dropdown de macho (mascotas de la app + "Externo"), fechas de emparejamiento/ovulación/puesta/incubación/eclosión (todas opcionales), huevos totales/fértiles, temperatura/humedad de incubación y número de crías.
+- `PetDetailScreen` ahora usa un sistema de tabs dinámico (`PetDetailTabType`) en lugar de índices fijos, para soportar tabs condicionales:
+  - Nuevo tab **Galería** (siempre visible, al final): grid de 3 columnas o vista de línea del tiempo (toggle), filtro por tipo de evento, visor de foto a pantalla completa con caption y fecha.
+  - Nuevo tab **Reproducción** (solo visible si el sexo de la mascota es "Hembra" o "Desconocido"): lista de registros con fecha de emparejamiento, huevos, fértiles, eclosión y crías.
+- Pulido visual final:
+  - Reemplazado `Icons.Default.ArrowBack` (deprecado) por `Icons.AutoMirrored.Filled.ArrowBack` en las 13 pantallas que lo usaban.
+  - Transiciones fadeIn/fadeOut entre pantallas configuradas a nivel de `NavHost` (Navigation Compose).
+  - Nueva `SplashScreen` (ícono de serpiente + "SnakeTracker") como pantalla de inicio, antes del Dashboard.
+  - Pull-to-refresh (API experimental de Material3 `pulltorefresh`, ya incluida en la versión del proyecto) agregado como wrapper compartido (`PullToRefreshWrapper`) en el Dashboard, `GastosScreen`, `CalendarioScreen` y en el contenedor de tabs de `PetDetailScreen` (cubre las 11 tabs con un solo wrapper).
+
+### Notas técnicas
+
+- Como las fuentes de datos de la app son *Flows* de Room que se actualizan solas ante cualquier cambio, no existe una operación de "refresco" real que ejecutar; `PullToRefreshWrapper` ofrece el gesto como confirmación táctil (una pausa breve) en lugar de simular una recarga de red inexistente.
+- `EmptyTabState`, usada por los nuevos tabs Galería y Reproducción (definidos en archivos separados para no sobrecargar `PetDetailScreen.kt`), se cambió de `private` a `internal`: en Kotlin, `private` a nivel de archivo no es visible entre archivos del mismo paquete, aunque estén en el mismo módulo.
+- No se subió la versión del BOM de Compose para lograr el pull-to-refresh: se confirmó por inspección del `.aar` que Material3 1.2.1 (la versión ya usada en el proyecto) incluye la API experimental `androidx.compose.material3.pulltorefresh`, evitando el riesgo de incompatibilidades entre el compilador de Compose y una versión más nueva del runtime.
+- El splash es una pantalla Compose más dentro del `NavHost` (con `popUpTo` para no quedar en el historial de navegación), no la API nativa `SplashScreen` de Android 12+; se priorizó esta implementación por ser autocontenida y no requerir recursos XML adicionales, cumpliendo el pedido de un splash "simple".
+
 ## Etapa 8 - Dashboard, alertas inteligentes y calendario
 
 **Fecha:** 2026-07-03

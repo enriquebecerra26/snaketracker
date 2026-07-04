@@ -118,3 +118,31 @@ data class ExpenseRecord(
     val amountMXN: Float,
     val notes: String? = null
 )
+
+val PhotoEventTypeOptions = listOf("Muda", "Peso", "Mensual", "Otro")
+
+data class PhotoEntry(
+    val id: Long = 0,
+    val petId: Long,
+    val date: Long,
+    val photoUri: String,
+    val caption: String? = null,
+    val eventType: String? = null
+)
+
+data class BreedingRecord(
+    val id: Long = 0,
+    val petId: Long,
+    val maleId: Long? = null,
+    val pairingDate: Long? = null,
+    val ovulationDate: Long? = null,
+    val layingDate: Long? = null,
+    val totalEggs: Int? = null,
+    val fertileEggs: Int? = null,
+    val incubationStartDate: Long? = null,
+    val hatchDate: Long? = null,
+    val hatchlings: Int? = null,
+    val incubationTempC: Float? = null,
+    val incubationHumidity: Int? = null,
+    val notes: String? = null
+)

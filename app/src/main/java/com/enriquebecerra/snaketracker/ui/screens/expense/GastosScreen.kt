@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +46,7 @@ import com.enriquebecerra.snaketracker.domain.usecase.GetExpensesUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetPetsUseCase
 import com.enriquebecerra.snaketracker.ui.common.BarChart
 import com.enriquebecerra.snaketracker.ui.common.BarChartEntry
+import com.enriquebecerra.snaketracker.ui.common.PullToRefreshWrapper
 import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModel
 import java.text.NumberFormat
@@ -97,7 +98,7 @@ fun GastosScreen(
                 title = { Text("Gastos") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -128,22 +129,24 @@ fun GastosScreen(
                 selectedFilter = selectedFilter,
                 onFilterChange = { selectedFilter = it }
             )
-            if (filteredExpenses.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "Sin gastos registrados",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 88.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(filteredExpenses, key = { it.id }) { expense ->
-                        ExpenseRow(expense = expense, petName = petNameFor(expense.petId, pets))
+            PullToRefreshWrapper(modifier = Modifier.weight(1f)) {
+                if (filteredExpenses.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Sin gastos registrados",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 88.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredExpenses, key = { it.id }) { expense ->
+                            ExpenseRow(expense = expense, petName = petNameFor(expense.petId, pets))
+                        }
                     }
                 }
             }

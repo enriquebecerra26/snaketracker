@@ -63,6 +63,7 @@ import com.enriquebecerra.snaketracker.domain.model.PetDashboardSummary
 import com.enriquebecerra.snaketracker.domain.usecase.AlertEngine
 import com.enriquebecerra.snaketracker.domain.usecase.DeletePetUseCase
 import com.enriquebecerra.snaketracker.domain.usecase.GetDashboardSummariesUseCase
+import com.enriquebecerra.snaketracker.ui.common.PullToRefreshWrapper
 import com.enriquebecerra.snaketracker.ui.common.formatDate
 import com.enriquebecerra.snaketracker.ui.common.snakeTrackerViewModel
 import com.enriquebecerra.snaketracker.ui.theme.SnakeTrackerTheme
@@ -152,8 +153,19 @@ private fun DashboardContent(
         return
     }
 
+    PullToRefreshWrapper(modifier = Modifier.padding(padding)) {
+        DashboardList(dashboardSummaries = dashboardSummaries, alerts = alerts, onPetClick = onPetClick)
+    }
+}
+
+@Composable
+private fun DashboardList(
+    dashboardSummaries: List<PetDashboardSummary>,
+    alerts: List<Alert>,
+    onPetClick: (Long) -> Unit
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
