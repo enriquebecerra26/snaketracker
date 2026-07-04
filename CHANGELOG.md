@@ -2,6 +2,25 @@
 
 Todas las etapas de desarrollo relevantes de SnakeTracker se documentan en este archivo.
 
+## Etapa 8 - Dashboard, alertas inteligentes y calendario
+
+**Fecha:** 2026-07-03
+
+### Añadido
+
+- `PetListScreen` se convierte en el Dashboard principal: cada card de mascota ahora muestra peso actual con variación (↑/↓ en verde/rojo), última comida ("hace X días", en rojo si supera el promedio + 3), próxima comida estimada, última muda, última defecación (naranja si >21 días, rojo si >30) e ícono de estado del terrario (verde/rojo). Debajo de las cards, una sección de "Alertas activas" (fondo rojo suave para críticas, naranja para advertencias) cuando existen.
+- `AlertEngine` (`domain/usecase/AlertEngine.kt`), un use case que combina Pet + Feeding + Weight + Shedding + Defecation + Health + Terrarium de todas las mascotas y emite `Flow<List<Alert>>` con las reglas: sin comer >28 días (crítica), pérdida de peso >10% en el último mes (crítica), sin defecar >25 días (advertencia) o >30 días (crítica), sin mudar >60 días (advertencia), registro de salud pendiente (advertencia), terrario fuera de rango según el último registro (advertencia), y próxima visita veterinaria en menos de 7 días (info).
+- Nuevos use cases agregadores `GetDashboardSummariesUseCase` y `GetCalendarEventsUseCase`, y consultas `getAll()` (cross-mascota) en los DAOs/repositorios de Weight, Length, Shedding, Defecation, Health y Terrarium para soportarlos.
+- Nueva pantalla `CalendarioScreen` (con `CalendarioViewModel`, ruta `calendar`, accesible desde el ícono de calendario en el `TopAppBar` del Dashboard): vista mensual dibujada con Canvas nativo de Compose (sin librerías externas), navegación entre meses, puntos de color debajo de cada día según los tipos de evento (verde=alimentación, azul=peso/longitud, morado=muda, naranja=defecación, rojo=salud, gris=terrario, amarillo=gasto), lista de eventos del día seleccionado al tocarlo, y sección de "Próximos recordatorios" con los eventos de los siguientes 7 días.
+- Notificaciones locales con WorkManager (`androidx.work:work-runtime-ktx`): canal `snake_alerts` (importancia alta) creado en `SnakeTrackerApplication.onCreate()`, `AlertCheckWorker` (`CoroutineWorker`) programado diariamente a las 9am vía `NotificationScheduler` que ejecuta `AlertEngine` y notifica si hay alertas críticas (con el nombre de la mascota afectada). Permiso `POST_NOTIFICATIONS` solicitado en tiempo de ejecución desde `MainActivity` para Android 13+.
+- Se eliminaron `GetPetListItemsUseCase` y el modelo `PetListItem` (Etapa 3), reemplazados por `GetDashboardSummariesUseCase`, que cubre el mismo cálculo y mucho más.
+
+### Notas técnicas
+
+- `Alert.icon` se modela como un enum de dominio (`AlertIcon`) en lugar de un tipo de UI (`ImageVector`), para mantener la capa de dominio libre de dependencias de Compose/Android; el mapeo a íconos concretos vive en `PetListScreen`.
+- Los colores de los puntos del calendario y de las alertas de advertencia usan valores literales (no roles del `ColorScheme`) porque funcionan como código de color semántico fijo pedido explícitamente en los requisitos, no como parte de la identidad visual de la app.
+- El worker no puede verificarse en este entorno sin un dispositivo/emulador; se probó por inspección de código y compilación, pero se recomienda validar en Android Studio que la notificación aparece tras forzar `WorkManager` con `adb shell cmd jobscheduler run` o esperando al ciclo de 24h.
+
 ## Etapa 7 - Salud, Terrario y Gastos
 
 **Fecha:** 2026-07-03

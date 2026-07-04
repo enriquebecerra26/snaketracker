@@ -13,6 +13,9 @@ interface HealthRecordDao {
     @Query("SELECT * FROM health_records WHERE petId = :petId ORDER BY date DESC")
     fun getByPetId(petId: Long): Flow<List<HealthRecord>>
 
+    @Query("SELECT * FROM health_records ORDER BY date DESC")
+    fun getAll(): Flow<List<HealthRecord>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(healthRecord: HealthRecord): Long
 

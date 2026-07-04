@@ -9,6 +9,8 @@ class LengthRepository(private val lengthLogDao: LengthLogDao) {
     fun getLengthLogsForPet(petId: Long): Flow<List<LengthLog>> =
         lengthLogDao.getByPetId(petId)
 
+    fun getAllLengthLogs(): Flow<List<LengthLog>> = lengthLogDao.getAll()
+
     suspend fun insertLengthLog(lengthLog: LengthLog): Long =
         lengthLogDao.insert(lengthLog)
 

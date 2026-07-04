@@ -13,6 +13,9 @@ interface SheddingLogDao {
     @Query("SELECT * FROM shedding_logs WHERE petId = :petId ORDER BY completedDate DESC")
     fun getByPetId(petId: Long): Flow<List<SheddingLog>>
 
+    @Query("SELECT * FROM shedding_logs ORDER BY completedDate DESC")
+    fun getAll(): Flow<List<SheddingLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sheddingLog: SheddingLog): Long
 

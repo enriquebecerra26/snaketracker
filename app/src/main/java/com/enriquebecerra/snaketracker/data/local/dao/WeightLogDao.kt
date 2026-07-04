@@ -14,6 +14,9 @@ interface WeightLogDao {
     @Query("SELECT * FROM weight_logs WHERE petId = :petId ORDER BY date DESC")
     fun getWeightLogsForPet(petId: Long): Flow<List<WeightLog>>
 
+    @Query("SELECT * FROM weight_logs ORDER BY date DESC")
+    fun getAllWeightLogs(): Flow<List<WeightLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWeightLog(weightLog: WeightLog): Long
 

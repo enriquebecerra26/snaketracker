@@ -9,6 +9,8 @@ class SheddingRepository(private val sheddingLogDao: SheddingLogDao) {
     fun getSheddingLogsForPet(petId: Long): Flow<List<SheddingLog>> =
         sheddingLogDao.getByPetId(petId)
 
+    fun getAllSheddingLogs(): Flow<List<SheddingLog>> = sheddingLogDao.getAll()
+
     suspend fun insertSheddingLog(sheddingLog: SheddingLog): Long =
         sheddingLogDao.insert(sheddingLog)
 

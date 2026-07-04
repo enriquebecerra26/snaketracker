@@ -13,6 +13,9 @@ interface DefecationLogDao {
     @Query("SELECT * FROM defecation_logs WHERE petId = :petId ORDER BY date DESC")
     fun getByPetId(petId: Long): Flow<List<DefecationLog>>
 
+    @Query("SELECT * FROM defecation_logs ORDER BY date DESC")
+    fun getAll(): Flow<List<DefecationLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(defecationLog: DefecationLog): Long
 

@@ -9,6 +9,8 @@ class HealthRepository(private val healthRecordDao: HealthRecordDao) {
     fun getHealthRecordsForPet(petId: Long): Flow<List<HealthRecord>> =
         healthRecordDao.getByPetId(petId)
 
+    fun getAllHealthRecords(): Flow<List<HealthRecord>> = healthRecordDao.getAll()
+
     suspend fun insertHealthRecord(healthRecord: HealthRecord): Long =
         healthRecordDao.insert(healthRecord)
 

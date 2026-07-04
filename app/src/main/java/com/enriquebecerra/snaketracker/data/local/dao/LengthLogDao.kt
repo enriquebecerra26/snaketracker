@@ -13,6 +13,9 @@ interface LengthLogDao {
     @Query("SELECT * FROM length_logs WHERE petId = :petId ORDER BY date DESC")
     fun getByPetId(petId: Long): Flow<List<LengthLog>>
 
+    @Query("SELECT * FROM length_logs ORDER BY date DESC")
+    fun getAll(): Flow<List<LengthLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(lengthLog: LengthLog): Long
 

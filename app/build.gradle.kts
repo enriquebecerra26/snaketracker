@@ -80,6 +80,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+    // WorkManager (notificaciones locales de alertas)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     // Coil (para cargar fotos de las mascotas)
     implementation("io.coil-kt:coil-compose:2.6.0")
 

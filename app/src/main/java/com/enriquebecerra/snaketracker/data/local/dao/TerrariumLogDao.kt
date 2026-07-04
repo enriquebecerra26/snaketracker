@@ -13,6 +13,9 @@ interface TerrariumLogDao {
     @Query("SELECT * FROM terrarium_logs WHERE petId = :petId ORDER BY date DESC")
     fun getByPetId(petId: Long): Flow<List<TerrariumLog>>
 
+    @Query("SELECT * FROM terrarium_logs ORDER BY date DESC")
+    fun getAll(): Flow<List<TerrariumLog>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(terrariumLog: TerrariumLog): Long
 

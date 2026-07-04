@@ -11,8 +11,16 @@ import com.enriquebecerra.snaketracker.data.repository.PetRepository
 import com.enriquebecerra.snaketracker.data.repository.SheddingRepository
 import com.enriquebecerra.snaketracker.data.repository.TerrariumRepository
 import com.enriquebecerra.snaketracker.data.repository.WeightRepository
+import com.enriquebecerra.snaketracker.notifications.AlertNotificationHelper
+import com.enriquebecerra.snaketracker.notifications.NotificationScheduler
 
 class SnakeTrackerApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        AlertNotificationHelper.createNotificationChannel(this)
+        NotificationScheduler.scheduleDailyAlertCheck(this)
+    }
 
     val database: SnakeTrackerDatabase by lazy {
         SnakeTrackerDatabase.getInstance(this)

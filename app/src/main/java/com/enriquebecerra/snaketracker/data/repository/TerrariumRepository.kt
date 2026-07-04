@@ -9,6 +9,8 @@ class TerrariumRepository(private val terrariumLogDao: TerrariumLogDao) {
     fun getTerrariumLogsForPet(petId: Long): Flow<List<TerrariumLog>> =
         terrariumLogDao.getByPetId(petId)
 
+    fun getAllTerrariumLogs(): Flow<List<TerrariumLog>> = terrariumLogDao.getAll()
+
     suspend fun insertTerrariumLog(terrariumLog: TerrariumLog): Long =
         terrariumLogDao.insert(terrariumLog)
 

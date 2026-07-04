@@ -118,8 +118,3 @@ data class ExpenseRecord(
     val amountMXN: Float,
     val notes: String? = null
 )
-
-data class PetListItem(
-    val pet: Pet,
-    val daysSinceLastFeeding: Int?
-)

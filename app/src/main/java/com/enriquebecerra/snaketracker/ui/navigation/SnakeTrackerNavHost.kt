@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.enriquebecerra.snaketracker.ui.screens.addpet.AddPetScreen
+import com.enriquebecerra.snaketracker.ui.screens.calendar.CalendarioScreen
 import com.enriquebecerra.snaketracker.ui.screens.defecation.AddDefecationScreen
 import com.enriquebecerra.snaketracker.ui.screens.editpet.EditPetScreen
 import com.enriquebecerra.snaketracker.ui.screens.expense.AddExpenseScreen
@@ -31,7 +32,8 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 onPetClick = { petId ->
                     navController.navigate(Screen.PetDetail.createRoute(petId))
                 },
-                onExpensesClick = { navController.navigate(Screen.Expenses.route) }
+                onExpensesClick = { navController.navigate(Screen.Expenses.route) },
+                onCalendarClick = { navController.navigate(Screen.Calendar.route) }
             )
         }
 
@@ -168,6 +170,10 @@ fun SnakeTrackerNavHost(navController: NavHostController = rememberNavController
                 onSaved = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )
+        }
+
+        composable(Screen.Calendar.route) {
+            CalendarioScreen(onBackClick = { navController.popBackStack() })
         }
     }
 }
