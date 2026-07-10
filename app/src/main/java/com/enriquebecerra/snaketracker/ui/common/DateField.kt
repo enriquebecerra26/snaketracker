@@ -19,11 +19,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 /**
  * Campo de fecha reutilizable con [DatePicker] de Material 3.
  * Si [allowClear] es true y hay un valor seleccionado, muestra un ícono para dejarlo vacío
  * (usado en campos opcionales como la fecha de adquisición).
+ *
+ * [DatePicker] de Material 3 opera internamente en UTC (su `selectedDateMillis`
+ * representa la medianoche UTC del día elegido), mientras que el resto de la app
+ * trabaja con millis de medianoche en la zona horaria local. Las funciones de
+ * abajo convierten entre ambas representaciones para evitar que el día
+ * seleccionado se desplace en zonas horarias distintas de UTC.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,13 +67,13 @@ fun DateField(
 
     if (showPicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = dateMillis ?: System.currentTimeMillis()
+            initialSelectedDateMillis = toUtcMidnightMillis(dateMillis ?: System.currentTimeMillis())
         )
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let(onDateChange)
+                    datePickerState.selectedDateMillis?.let { onDateChange(toLocalMidnightMillis(it)) }
                     showPicker = false
                 }) {
                     Text("Aceptar")
@@ -79,4 +88,16 @@ fun DateField(
             DatePicker(state = datePickerState)
         }
     }
+}
+
+/** Convierte millis de medianoche local a millis de medianoche UTC del mismo día calendario. */
+private fun toUtcMidnightMillis(localMillis: Long): Long {
+    val localDate = Instant.ofEpochMilli(localMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+    return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+}
+
+/** Convierte millis de medianoche UTC (los que entrega [DatePicker]) a millis de medianoche local. */
+private fun toLocalMidnightMillis(utcMillis: Long): Long {
+    val localDate = Instant.ofEpochMilli(utcMillis).atZone(ZoneOffset.UTC).toLocalDate()
+    return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }
